@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --pine:    #0F3D3E;
+    --brass:   #C9A227;
+    --ink:     #16211F;
+    --muted:   #5C6B66;
+    --paper:   #FFFFFF;
+    --surface: #F4F6F4;
+    --line:    #DCE3DF;
+    --error:   #A63D2F;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  .frame {
+    max-width: 560px; margin: 0 auto; min-height: 100vh;
+    background: var(--paper); display: flex; flex-direction: column;
+  }
+
+  .progress { height: 5px; background: var(--line); flex: none; }
+  .progress span {
+    display: block; height: 100%; width: 0;
+    background: var(--brass); transition: width .3s ease;
+  }
+
+  header { padding: 18px 22px 14px; border-bottom: 1px solid var(--line); flex: none; }
+  .church {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 15px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--pine); margin: 0;
+  }
+  .counter { font-size: 13px; color: var(--muted); margin: 3px 0 0; }
+
+  main { flex: 1; padding: 26px 22px 20px; }
+  .step { display: none; }
+  .step.active { display: block; animation: rise .25s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+  @media (prefers-reduced-motion: reduce) {
+    .step.active { animation: none; }
+    .progress span { transition: none; }
+  }
+
+  h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 27px; line-height: 1.25; margin: 0 0 6px;
+    color: var(--pine); font-weight: 400;
+  }
+  .lead { color: var(--muted); margin: 0 0 24px; font-size: 15.5px; }
+
+  .field { margin-bottom: 20px; }
+  label { display: block; font-size: 14px; font-weight: 600; letter-spacing: .02em; margin-bottom: 7px; }
+  .opt { font-weight: 400; color: var(--muted); }
+
+  input[type=text], input[type=tel], input[type=email],
+  input[type=number], select, textarea {
+    width: 100%; padding: 14px 15px; font-size: 17px; font-family: inherit;
+    color: var(--ink); background: var(--paper);
+    border: 1.5px solid var(--line); border-radius: 10px;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: 3px solid rgba(201,162,39,.35); border-color: var(--pine);
+  }
+  textarea { min-height: 88px; resize: vertical; }
+
+  /* ---- date as three plain dropdowns ---- */
+  .dateparts { display: grid; grid-template-columns: 1fr 1.5fr 1.2fr; gap: 8px; }
+  .dateparts select { padding: 14px 8px; font-size: 16px; }
+  .datehint { font-size: 13.5px; color: var(--muted); margin: 7px 0 0; }
+
+  /* ---- choice cards ---- */
+  .choices { display: grid; gap: 9px; }
+  .choice {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 14px 15px; border: 1.5px solid var(--line);
+    border-radius: 10px; cursor: pointer; font-size: 16.5px; font-weight: 400;
+  }
+  .choice input { accent-color: var(--pine); width: 20px; height: 20px; flex: none; margin-top: 2px; }
+  .choice:has(input:checked) { border-color: var(--pine); background: #F0F5F3; }
+  .choice:has(input:checked) .ctitle { font-weight: 700; }
+  .choice:focus-within { outline: 3px solid rgba(201,162,39,.35); }
+  .ctitle { display: block; font-weight: 600; }
+  .cnote { display: block; font-size: 14px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+  /* ---- photo ---- */
+  .target {
+    width: 210px; height: 210px; margin: 6px auto 20px;
+    border-radius: 50%; border: 3px dashed var(--brass); background: var(--surface);
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    overflow: hidden; cursor: pointer;
+  }
+  .target.filled { border-style: solid; border-color: var(--pine); }
+  .target img { width: 100%; height: 100%; object-fit: cover; }
+  .target svg { width: 52px; height: 52px; stroke: var(--pine); fill: none; stroke-width: 1.6; }
+  .target b { font-size: 15px; margin-top: 10px; color: var(--pine); }
+  .camera { text-align: center; }
+  .hint { font-size: 14.5px; color: var(--muted); margin: 0 0 4px; }
+  .linky {
+    display: inline; font-size: 14.5px; font-weight: 600;
+    color: var(--pine); text-decoration: underline; cursor: pointer;
+  }
+  .offscreen {
+    position: absolute; width: 1px; height: 1px;
+    opacity: 0; overflow: hidden; border: 0; padding: 0;
+  }
+
+  /* ---- location ---- */
+  .locbtn {
+    width: 100%; padding: 14px; font-size: 16px; font-family: inherit; font-weight: 600;
+    color: var(--pine); background: var(--paper);
+    border: 1.5px solid var(--pine); border-radius: 10px; cursor: pointer;
+  }
+  .locstate { font-size: 14.5px; margin: 9px 0 0; color: var(--muted); }
+  .locstate.good { color: var(--pine); font-weight: 600; }
+  .locstate.bad  { color: var(--error); }
+
+  .child { border: 1.5px solid var(--line); border-radius: 10px; padding: 15px; margin-bottom: 12px; }
+  .child h4 {
+    margin: 0 0 12px; font-size: 13px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  /* ---- review ---- */
+  .note {
+    font-size: 15px; color: var(--muted); background: var(--surface);
+    padding: 12px 14px; border-radius: 9px; margin: 0 0 20px;
+  }
+  .group {
+    font-size: 12.5px; letter-spacing: .09em; text-transform: uppercase;
+    color: var(--muted); margin: 24px 0 2px; font-weight: 700;
+  }
+  .group:first-of-type { margin-top: 0; }
+  .row {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+    width: 100%; padding: 13px 2px; border: 0; border-bottom: 1px solid var(--line);
+    background: none; font-family: inherit; font-size: 15.5px; text-align: left; cursor: pointer;
+  }
+  .row .k { color: var(--muted); flex: none; max-width: 50%; }
+  .row .v { text-align: right; font-weight: 600; color: var(--ink); }
+  .row .v.blank { font-weight: 600; color: var(--brass); }
+  .row:focus-visible { outline: 3px solid rgba(201,162,39,.45); }
+
+  .alert {
+    background: #FBF0EE; border-left: 4px solid var(--error); color: var(--error);
+    padding: 12px 14px; border-radius: 0 8px 8px 0;
+    font-size: 15px; margin-bottom: 18px; display: none;
+  }
+  .alert.show { display: block; }
+  .saved {
+    background: #EFF5F1; border-left: 4px solid var(--pine); color: var(--pine);
+    padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 15px; margin-bottom: 20px;
+  }
+
+  footer {
+    padding: 14px 22px 22px; border-top: 1px solid var(--line);
+    display: flex; gap: 11px; background: var(--paper);
+    position: sticky; bottom: 0; flex: none;
+  }
+  button {
+    flex: 1; padding: 16px; font-size: 17px; font-family: inherit; font-weight: 600;
+    border-radius: 10px; border: 1.5px solid var(--pine); cursor: pointer;
+  }
+  .primary { background: var(--pine); color: var(--paper); }
+  .ghost   { background: var(--paper); color: var(--pine); flex: 0 0 32%; }
+  button:disabled { opacity: .55; cursor: default; }
+  button:focus-visible { outline: 3px solid rgba(201,162,39,.5); outline-offset: 2px; }
+
+  .done { text-align: center; padding: 44px 0; }
+  .tick {
+    width: 74px; height: 74px; margin: 0 auto 22px; border-radius: 50%;
+    background: var(--pine); display: flex; align-items: center; justify-content: center;
+  }
+  .tick svg { width: 34px; height: 34px; stroke: var(--paper); stroke-width: 2.5; fill: none; }
+  .refno {
+    font-family: Georgia, serif; font-size: 20px; color: var(--pine);
+    background: var(--surface); padding: 12px; border-radius: 9px; margin: 20px 0 0;
+  }
+  .doneActions { display: flex; flex-direction: column; gap: 11px; margin-top: 30px; }
+  .doneActions button { width: 100%; flex: none; }
+</style>
+</head>
+
+<body>
+<div class="frame">
+
+  <div class="progress"><span id="bar"></span></div>
+
+  <header>
+    <p class="church">T.C.C Assemblies of God</p>
+    <p class="counter" id="counter">Membership registration</p>
+  </header>
+
+  <main>
+    <div class="alert" id="alert"></div>
+
+    <!-- 0 WELCOME -->
+    <section class="step active">
+      <h2>Welcome home</h2>
+      <p class="lead">This takes about five minutes. You will need your phone number, and
+        your camera at the end for a photograph.</p>
+      <p class="lead">Registering for a parent or grandparent? Please do. Fill it in with
+        their details, not yours.</p>
+    </section>
+
+    <!-- 1 NAME -->
+    <section class="step">
+      <h2>Your name</h2>
+      <p class="lead">Exactly as it appears on your official documents.</p>
+      <div class="field">
+        <label for="f_surname">Surname</label>
+        <input type="text" id="f_surname" autocomplete="family-name">
+      </div>
+      <div class="field">
+        <label for="f_middle">Middle names <span class="opt">(if any)</span></label>
+        <input type="text" id="f_middle" autocomplete="additional-name">
+      </div>
+      <div class="field">
+        <label for="f_first">First name</label>
+        <input type="text" id="f_first" autocomplete="given-name">
+      </div>
+    </section>
+
+    <!-- 2 PERSONAL -->
+    <section class="step">
+      <h2>About you</h2>
+      <p class="lead">A few details for the church records.</p>
+
+      <div class="field">
+        <label>Date of birth</label>
+        <div class="dateparts" data-date="f_dob" data-from="1915"></div>
+        <p class="datehint">Choose the day, then the month, then the year.</p>
+      </div>
+
+      <div class="field">
+        <label>Sex</label>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="sex" value="Male"><span class="ctitle">Male</span></label>
+          <label class="choice"><input type="radio" name="sex" value="Female"><span class="ctitle">Female</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="f_edu">Educational level</label>
+        <select id="f_edu">
+          <option value="">Choose one</option>
+          <option>Non-Literate</option>
+          <option>Informal Skill Training (Apprenticeship)</option>
+          <option>Basic (Primary, Middle, J.H.S)</option>
+          <option>Secondary, Technical or Vocational</option>
+          <option>Tertiary</option>
+          <option>Other</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f_occupation">Occupation or profession <span class="opt">(optional)</span></label>
+        <input type="text" id="f_occupation">
+      </div>
+      <div class="field">
+        <label for="f_workplace">Place of work or employer <span class="opt">(optional)</span></label>
+        <input type="text" id="f_workplace">
+      </div>
+    </section>
+
+    <!-- 3 ORIGIN -->
+    <section class="step">
+      <h2>Where you are from</h2>
+      <p class="lead">Your hometown, not where you live now.</p>
+      <div class="field">
+        <label for="f_hometown">Hometown <span class="opt">(optional)</span></label>
+        <input type="text" id="f_hometown">
+      </div>
+      <div class="field">
+        <label for="f_region">Region <span class="opt">(optional)</span></label>
+        <select id="f_region" class="regions"></select>
+      </div>
+      <div class="field">
+        <label for="f_country">Country</label>
+        <input type="text" id="f_country" value="Ghana">
+      </div>
+      <div class="field">
+        <label for="f_languages">Languages spoken <span class="opt">(optional)</span></label>
+        <input type="text" id="f_languages" placeholder="For example: Twi, Ga, English">
+      </div>
+    </section>
+
+    <!-- 4 CONTACT -->
+    <section class="step">
+      <h2>How we reach you</h2>
+      <p class="lead">Your phone number is how we identify your record, so please check it.</p>
+
+      <div class="field">
+        <label for="f_phone">Phone number</label>
+        <input type="tel" id="f_phone" placeholder="024 123 4567" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label for="f_email">Email address <span class="opt">(optional)</span></label>
+        <input type="email" id="f_email" autocomplete="email" placeholder="For your confirmation message">
+      </div>
+      <div class="field">
+        <label for="f_residential">Residential address or house number <span class="opt">(optional)</span></label>
+        <input type="text" id="f_residential">
+      </div>
+      <div class="field">
+        <label for="f_digital">Ghana Post digital address <span class="opt">(optional)</span></label>
+        <input type="text" id="f_digital" placeholder="GA-123-4567" inputmode="text" maxlength="11">
+        <p class="datehint">The dashes are added for you as you type.</p>
+      </div>
+      <div class="field">
+        <label for="f_postal">Postal address <span class="opt">(optional)</span></label>
+        <input type="text" id="f_postal">
+      </div>
+
+      <div class="field">
+        <label>Pin your home on the map <span class="opt">(optional)</span></label>
+        <button type="button" class="locbtn" id="locBtn" onclick="captureLocation()">
+          Use my current location
+        </button>
+        <p class="locstate" id="locState">
+          Only tap this if you are at home now. It helps the church visitation team find you.
+        </p>
+      </div>
+    </section>
+
+    <!-- 5 PARENTS -->
+    <section class="step">
+      <h2>Your parents</h2>
+      <p class="lead">Leave blank anything you would rather not answer.</p>
+      <div class="field">
+        <label for="f_father">Father's name <span class="opt">(optional)</span></label>
+        <input type="text" id="f_father">
+      </div>
+      <div class="field">
+        <label>Father</label>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="fatherStatus" value="Alive"><span class="ctitle">Alive</span></label>
+          <label class="choice"><input type="radio" name="fatherStatus" value="Deceased"><span class="ctitle">Deceased</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f_mother">Mother's name <span class="opt">(optional)</span></label>
+        <input type="text" id="f_mother">
+      </div>
+      <div class="field">
+        <label>Mother</label>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="motherStatus" value="Alive"><span class="ctitle">Alive</span></label>
+          <label class="choice"><input type="radio" name="motherStatus" value="Deceased"><span class="ctitle">Deceased</span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 MARITAL -->
+    <section class="step">
+      <h2>Marital status</h2>
+      <p class="lead">Choose the one that applies to you today.</p>
+      <div class="field">
+        <div class="choices">
+          <label class="choice"><input type="radio" name="marital" value="Single"><span class="ctitle">Single</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Married"><span class="ctitle">Married</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Divorced"><span class="ctitle">Divorced</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Separated"><span class="ctitle">Separated</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Widowed"><span class="ctitle">Widowed</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Divorced and Remarried"><span class="ctitle">Divorced and remarried</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Widowed and Remarried"><span class="ctitle">Widowed and remarried</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Co-habiting"><span class="ctitle">Co-habiting</span></label>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 SPOUSE (shown only when relevant) -->
+    <section class="step">
+      <h2>Your spouse</h2>
+      <p class="lead">All of this is optional. Fill in what you know.</p>
+
+      <div class="field">
+        <label>Type of marriage</label>
+        <div class="choices">
+          <label class="choice">
+            <input type="radio" name="marriageType" value="Customary alone">
+            <span>
+              <span class="ctitle">Customary alone</span>
+              <span class="cnote">The traditional rites were performed between the two
+                families. The marriage was not registered with the state.</span>
+            </span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="marriageType" value="Customary and Ordinance">
+            <span>
+              <span class="ctitle">Customary and Ordinance</span>
+              <span class="cnote">The traditional rites were performed, and the marriage
+                was also registered under the Marriages Act, so it is recognised by law.</span>
+            </span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="marriageType" value="Customary, Ordinance and Church Blessing">
+            <span>
+              <span class="ctitle">Customary, Ordinance and Church Blessing</span>
+              <span class="cnote">Traditional rites, legal registration, and a church
+                ceremony where the marriage was blessed before the congregation.</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="f_spouseName">Name of spouse or partner</label>
+        <input type="text" id="f_spouseName">
+      </div>
+      <div class="field">
+        <label>Spouse's date of birth</label>
+        <div class="dateparts" data-date="f_spouseDob" data-from="1915"></div>
+      </div>
+      <div class="field">
+        <label for="f_spouseOccupation">Spouse's occupation</label>
+        <input type="text" id="f_spouseOccupation">
+      </div>
+      <div class="field">
+        <label for="f_spouseWorkplace">Spouse's place of work</label>
+        <input type="text" id="f_spouseWorkplace">
+      </div>
+      <div class="field">
+        <label for="f_spouseHometown">Spouse's hometown</label>
+        <input type="text" id="f_spouseHometown">
+      </div>
+      <div class="field">
+        <label for="f_spouseRegion">Spouse's hometown region</label>
+        <select id="f_spouseRegion" class="regions"></select>
+      </div>
+      <div class="field">
+        <label for="f_spouseCountry">Spouse's hometown country</label>
+        <input type="text" id="f_spouseCountry" value="Ghana">
+      </div>
+      <div class="field">
+        <label for="f_spousePostal">Spouse's postal address</label>
+        <input type="text" id="f_spousePostal">
+      </div>
+      <div class="field">
+        <label for="f_spouseReligion">Spouse's religion</label>
+        <input type="text" id="f_spouseReligion" value="Christian">
+      </div>
+      <div class="field">
+        <label for="f_spouseChurch">Spouse's church affiliation</label>
+        <input type="text" id="f_spouseChurch" value="Assemblies of God">
+      </div>
+      <div class="field">
+        <label for="f_spouseEdu">Spouse's educational level</label>
+        <select id="f_spouseEdu">
+          <option value="">Choose one</option>
+          <option>Non-Literate</option>
+          <option>Informal Skill Training (Apprenticeship)</option>
+          <option>Basic (Primary, Middle, J.H.S)</option>
+          <option>Secondary, Technical or Vocational</option>
+          <option>Tertiary</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- 8 CHILDREN -->
+    <section class="step">
+      <h2>Children and dependants</h2>
+      <p class="lead">Leave the count at zero if this does not apply to you.</p>
+      <div class="field">
+        <label for="f_childCount">Number of children</label>
+        <input type="number" id="f_childCount" min="0" max="20" value="0">
+      </div>
+      <div id="childBoxes"></div>
+      <div class="field">
+        <label for="f_dependantCount">Number of dependants <span class="opt">(optional)</span></label>
+        <input type="number" id="f_dependantCount" min="0" max="20" value="0">
+      </div>
+      <div class="field">
+        <label for="f_dependantNames">Names of dependants <span class="opt">(optional)</span></label>
+        <textarea id="f_dependantNames" placeholder="One name per line"></textarea>
+      </div>
+    </section>
+
+    <!-- 9 REVIEW -->
+    <section class="step">
+      <h2>Check before you send</h2>
+      <p class="lead">Tap any line to change it.</p>
+      <p class="note" id="reviewNote"></p>
+      <div class="review" id="review"></div>
+    </section>
+
+    <!-- 10 PHOTO (after the details are saved) -->
+    <section class="step camera">
+      <div class="saved" id="savedNote">Your details are saved. One last thing.</div>
+      <h2>Your photograph</h2>
+      <p class="lead">Tap the circle to open your camera.</p>
+
+      <label class="target" id="target" for="photoInput">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h3l2-2.5h8L18 8h3v11H3z"/><circle cx="12" cy="13" r="3.8"/>
+        </svg>
+        <b>Take photo</b>
+      </label>
+
+      <p class="hint">Face the light. Plain wall behind you. Head and shoulders only.</p>
+      <p class="hint"><label for="galleryInput" class="linky">Or choose a photo already on this phone</label></p>
+
+      <input type="file" id="photoInput" accept="image/*" capture="user" class="offscreen">
+      <input type="file" id="galleryInput" accept="image/*" class="offscreen">
+    </section>
+
+    <!-- 11 DONE -->
+    <section class="step">
+      <div class="done">
+        <div class="tick">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12.5l5.5 5.5L20 7"/>
+          </svg>
+        </div>
+        <h2 id="doneTitle">You are registered</h2>
+        <p class="lead" id="doneLine">Thank you. Your details are with the media team.</p>
+        <p class="refno" id="refNo"></p>
+        <div class="doneActions" id="doneActions">
+          <button class="primary" onclick="resetForm()">Register another person</button>
+          <button class="ghost" onclick="finish()">I am finished</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <button class="ghost" id="backBtn" onclick="go(-1)">Back</button>
+    <button class="primary" id="nextBtn" onclick="go(1)">Start</button>
+  </footer>
+
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   PASTE YOUR WEB APP URL HERE.
+   Apps Script > Deploy > Manage deployments > Copy. It ends in /exec.
+   ------------------------------------------------------------------ */
+var API = 'https://script.google.com/macros/s/AKfycbyiM7BbzPpkDut0qi9B0Ye3DGFWnxSl3TPGgB_N86-_2P93ol-6snUWw6VbkZYPNQAh/exec';
+
+/**
+ * Sends a request to the Apps Script backend.
+ * No headers are set on purpose. A string body defaults to plain text,
+ * which the browser treats as a simple request, so there is no CORS
+ * preflight for Apps Script to fail.
+ */
+function callApi(payload, onDone, onFail) {
+  var request = new XMLHttpRequest();
+  request.open('POST', API, true);
+  request.timeout = 60000;
+
+  request.onload = function () {
+    var parsed;
+    try {
+      parsed = JSON.parse(request.responseText);
+    } catch (error) {
+      onFail();
+      return;
+    }
+    onDone(parsed);
+  };
+
+  request.onerror   = onFail;
+  request.ontimeout = onFail;
+  request.send(JSON.stringify(payload));
+}
+
+var steps   = document.querySelectorAll('.step');
+var current = 0;
+var photoData = '';
+var returnToReview = false;
+var registrationId = '';
+var locationValue = '';
+var mapLink = '';
+
+var SPOUSE_STEP = 7;
+var REVIEW_STEP = 9;
+var PHOTO_STEP  = 10;
+var DONE_STEP   = 11;
+
+var MARRIED = ['Married', 'Divorced and Remarried', 'Widowed and Remarried', 'Co-habiting'];
+
+var REGIONS = ['Ahafo','Ashanti','Bono','Bono East','Central','Eastern','Greater Accra',
+  'North East','Northern','Oti','Savannah','Upper East','Upper West','Volta',
+  'Western','Western North','Outside Ghana'];
+
+var MONTHS = ['January','February','March','April','May','June',
+  'July','August','September','October','November','December'];
+
+var CAMERA_ICON = document.getElementById('target').innerHTML;
+
+function val(id)   { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function radio(name) {
+  var el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : '';
+}
+function hasSpouse() { return MARRIED.indexOf(radio('marital')) !== -1; }
+
+function warn(message) {
+  var box = document.getElementById('alert');
+  box.textContent = message;
+  box.classList.add('show');
+  window.scrollTo(0, 0);
+}
+function clearWarning() { document.getElementById('alert').classList.remove('show'); }
+
+/* ---------- build the repetitive bits ---------- */
+
+function buildRegions() {
+  var html = '<option value="">Choose one</option>';
+  for (var i = 0; i < REGIONS.length; i++) {
+    html += '<option>' + REGIONS[i] + '</option>';
+  }
+  var lists = document.querySelectorAll('select.regions');
+  for (var j = 0; j < lists.length; j++) lists[j].innerHTML = html;
+}
+
+/**
+ * Three plain dropdowns instead of a calendar widget. Older members struggle
+ * to reach 1948 in a date picker, but a year list is just a long menu.
+ */
+function buildDate(holder) {
+  var id = holder.getAttribute('data-date');
+  var from = parseInt(holder.getAttribute('data-from'), 10);
+  var thisYear = new Date().getFullYear();
+
+  var days = '<option value="">Day</option>';
+  for (var d = 1; d <= 31; d++) days += '<option value="' + d + '">' + d + '</option>';
+
+  var months = '<option value="">Month</option>';
+  for (var m = 0; m < 12; m++) months += '<option value="' + (m + 1) + '">' + MONTHS[m] + '</option>';
+
+  var years = '<option value="">Year</option>';
+  for (var y = thisYear; y >= from; y--) years += '<option value="' + y + '">' + y + '</option>';
+
+  holder.innerHTML =
+      '<select id="' + id + '_d" aria-label="Day">'   + days   + '</select>'
+    + '<select id="' + id + '_m" aria-label="Month">' + months + '</select>'
+    + '<select id="' + id + '_y" aria-label="Year">'  + years  + '</select>';
+}
+
+function buildAllDates() {
+  var holders = document.querySelectorAll('.dateparts');
+  for (var i = 0; i < holders.length; i++) {
+    if (!holders[i].firstChild) buildDate(holders[i]);
+  }
+}
+
+/** Returns YYYY-MM-DD, or '' if the date is not complete. */
+function dateValue(id) {
+  var d = val(id + '_d'), m = val(id + '_m'), y = val(id + '_y');
+  if (!d || !m || !y) return '';
+  return y + '-' + pad(m) + '-' + pad(d);
+}
+function pad(n) { return (String(n).length < 2 ? '0' : '') + n; }
+
+/** Human readable version for the review screen. */
+function dateReadable(id) {
+  var d = val(id + '_d'), m = val(id + '_m'), y = val(id + '_y');
+  if (!d || !m || !y) return '';
+  return d + ' ' + MONTHS[parseInt(m, 10) - 1] + ' ' + y;
+}
+
+/* ---------- Ghana Post digital address mask ---------- */
+
+document.getElementById('f_digital').addEventListener('input', function () {
+  var raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 9);
+  var out = raw.substring(0, 2);
+  if (raw.length > 2) out += '-' + raw.substring(2, 5);
+  if (raw.length > 5) out += '-' + raw.substring(5, 9);
+  this.value = out;
+});
+
+/* ---------- location ---------- */
+
+function captureLocation() {
+  var state = document.getElementById('locState');
+  var button = document.getElementById('locBtn');
+
+  if (!navigator.geolocation) {
+    state.className = 'locstate bad';
+    state.textContent = 'This phone cannot share its location. You can skip this.';
+    return;
+  }
+
+  button.disabled = true;
+  state.className = 'locstate';
+  state.textContent = 'Finding your location, please wait.';
+
+  navigator.geolocation.getCurrentPosition(
+    function (position) {
+      var lat = position.coords.latitude.toFixed(6);
+      var lng = position.coords.longitude.toFixed(6);
+      locationValue = lat + ', ' + lng;
+      mapLink = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+
+      button.disabled = false;
+      button.textContent = 'Update my location';
+      state.className = 'locstate good';
+      state.textContent = 'Location saved.';
+    },
+    function () {
+      button.disabled = false;
+      state.className = 'locstate bad';
+      state.textContent = 'Location was not shared. You can skip this, '
+                        + 'or type your address above instead.';
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+/* ---------- photo ---------- */
+
+function handlePhoto(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  var image = new Image();
+
+  image.onerror = function () {
+    warn('That image could not be read. Please take the photo again.');
+  };
+
+  image.onload = function () {
+    var max = 800;
+    var scale = Math.min(1, max / Math.max(image.width, image.height));
+    var canvas = document.createElement('canvas');
+    canvas.width  = Math.round(image.width  * scale);
+    canvas.height = Math.round(image.height * scale);
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    photoData = canvas.toDataURL('image/jpeg', 0.82);
+
+    var target = document.getElementById('target');
+    target.innerHTML = '<img src="' + photoData + '" alt="Your photograph">';
+    target.classList.add('filled');
+    document.querySelector('.camera .hint').textContent = 'Tap the photo to take it again.';
+    document.getElementById('nextBtn').textContent = 'Send my photo';
+    URL.revokeObjectURL(image.src);
+    clearWarning();
+  };
+
+  image.src = URL.createObjectURL(file);
+}
+
+document.getElementById('photoInput').addEventListener('change', handlePhoto);
+document.getElementById('galleryInput').addEventListener('change', handlePhoto);
+
+/* ---------- children ---------- */
+
+document.getElementById('f_childCount').addEventListener('input', function () {
+  var stated = Math.max(0, parseInt(this.value, 10) || 0);
+  var count = Math.min(5, stated);
+  var box = document.getElementById('childBoxes');
+  if (box.querySelectorAll('.child').length === count) return;
+
+  var html = '';
+  for (var i = 1; i <= count; i++) {
+    var previousName = escapeHtml(val('f_child' + i + 'Name'));
+    html += '<div class="child"><h4>Child ' + i + '</h4>'
+          + '<div class="field"><label for="f_child' + i + 'Name">Full name</label>'
+          + '<input type="text" id="f_child' + i + 'Name" value="' + previousName + '"></div>'
+          + '<div class="field"><label>Date of birth</label>'
+          + '<div class="dateparts" data-date="f_child' + i + 'Dob" data-from="1950"></div>'
+          + '</div></div>';
+  }
+  if (stated > 5) {
+    html += '<p class="hint">The form records the first five children. '
+          + 'Please give the media team the remaining names.</p>';
+  }
+  box.innerHTML = html;
+  buildAllDates();
+});
+
+/* ---------- validation ---------- */
+
+function stepIsValid() {
+  if (current === 1) {
+    if (!val('f_surname')) { warn('Please enter your surname.'); return false; }
+    if (!val('f_first'))   { warn('Please enter your first name.'); return false; }
+  }
+  if (current === 2 && !val('f_edu')) {
+    warn('Please choose your educational level.');
+    return false;
+  }
+  if (current === 4) {
+    var digits = val('f_phone').replace(/[^0-9]/g, '');
+    if (digits.length < 9) { warn('Please enter a valid phone number.'); return false; }
+    var email = val('f_email');
+    if (email && email.indexOf('@') === -1) {
+      warn('That email address does not look right. Correct it, or clear it.');
+      return false;
+    }
+  }
+  if (current === 6 && !radio('marital')) {
+    warn('Please choose your marital status.');
+    return false;
+  }
+  return true;
+}
+
+/* ---------- navigation ---------- */
+
+function go(direction) {
+  clearWarning();
+
+  if (current === DONE_STEP) return;
+
+  if (current === PHOTO_STEP) {
+    if (direction > 0) sendPhoto();
+    return;
+  }
+
+  if (direction > 0) {
+    if (current === REVIEW_STEP) { sendDetails(); return; }
+    if (!stepIsValid()) return;
+  }
+
+  if (returnToReview) {
+    returnToReview = false;
+    show(REVIEW_STEP);
+    return;
+  }
+
+  var next = current + direction;
+  if (next === SPOUSE_STEP && !hasSpouse()) next += direction;
+  if (next < 0 || next > REVIEW_STEP) return;
+
+  show(next);
+}
+
+function show(index) {
+  steps[current].classList.remove('active');
+  current = index;
+  steps[current].classList.add('active');
+  window.scrollTo(0, 0);
+
+  if (current === REVIEW_STEP) buildReview();
+
+  var visible = [];
+  for (var i = 1; i <= PHOTO_STEP; i++) {
+    if (i === SPOUSE_STEP && !hasSpouse()) continue;
+    visible.push(i);
+  }
+  var total = visible.length;
+  var shown = visible.indexOf(current) + 1;
+
+  document.getElementById('bar').style.width =
+    (current === 0 ? 0 : shown / total * 100) + '%';
+  document.getElementById('counter').textContent =
+    current === 0 ? 'Membership registration' : 'Step ' + shown + ' of ' + total;
+
+  var back = document.getElementById('backBtn');
+  back.style.visibility = (current === 0 || current === PHOTO_STEP) ? 'hidden' : 'visible';
+  back.textContent = returnToReview ? 'Cancel' : 'Back';
+
+  document.getElementById('nextBtn').textContent =
+    returnToReview ? 'Back to check'
+      : current === 0 ? 'Start'
+      : current === REVIEW_STEP ? 'Send my details'
+      : current === PHOTO_STEP ? (photoData ? 'Send my photo' : 'Skip for now')
+      : 'Next';
+}
+
+/* ---------- review ---------- */
+
+function reviewGroups() {
+  var groups = [
+    ['Your name', [
+      ['Surname',      1, 'f_surname', '#f_surname'],
+      ['Middle names', 1, 'f_middle',  '#f_middle'],
+      ['First name',   1, 'f_first',   '#f_first']
+    ]],
+    ['About you', [
+      ['Date of birth',     2, {date: 'f_dob'},  '#f_dob_d'],
+      ['Sex',               2, {radio: 'sex'},   'input[name="sex"]'],
+      ['Educational level', 2, 'f_edu',          '#f_edu'],
+      ['Occupation',        2, 'f_occupation',   '#f_occupation'],
+      ['Place of work',     2, 'f_workplace',    '#f_workplace']
+    ]],
+    ['Where you are from', [
+      ['Hometown',         3, 'f_hometown',  '#f_hometown'],
+      ['Region',           3, 'f_region',    '#f_region'],
+      ['Country',          3, 'f_country',   '#f_country'],
+      ['Languages spoken', 3, 'f_languages', '#f_languages']
+    ]],
+    ['How we reach you', [
+      ['Phone number',        4, 'f_phone',       '#f_phone'],
+      ['Email address',       4, 'f_email',       '#f_email'],
+      ['Residential address', 4, 'f_residential', '#f_residential'],
+      ['Digital address',     4, 'f_digital',     '#f_digital'],
+      ['Postal address',      4, 'f_postal',      '#f_postal'],
+      ['Map location',        4, function () { return locationValue ? 'Pinned' : ''; }, '#locBtn']
+    ]],
+    ['Your parents', [
+      ["Father's name", 5, 'f_father', '#f_father'],
+      ['Father',        5, {radio: 'fatherStatus'}, 'input[name="fatherStatus"]'],
+      ["Mother's name", 5, 'f_mother', '#f_mother'],
+      ['Mother',        5, {radio: 'motherStatus'}, 'input[name="motherStatus"]']
+    ]],
+    ['Marital status', [
+      ['Marital status', 6, {radio: 'marital'}, 'input[name="marital"]']
+    ]]
+  ];
+
+  if (hasSpouse()) {
+    groups.push(['Your spouse', [
+      ['Type of marriage',   7, {radio: 'marriageType'}, 'input[name="marriageType"]'],
+      ['Name',               7, 'f_spouseName',       '#f_spouseName'],
+      ['Date of birth',      7, {date: 'f_spouseDob'}, '#f_spouseDob_d'],
+      ['Occupation',         7, 'f_spouseOccupation', '#f_spouseOccupation'],
+      ['Place of work',      7, 'f_spouseWorkplace',  '#f_spouseWorkplace'],
+      ['Hometown',           7, 'f_spouseHometown',   '#f_spouseHometown'],
+      ['Region',             7, 'f_spouseRegion',     '#f_spouseRegion'],
+      ['Country',            7, 'f_spouseCountry',    '#f_spouseCountry'],
+      ['Postal address',     7, 'f_spousePostal',     '#f_spousePostal'],
+      ['Religion',           7, 'f_spouseReligion',   '#f_spouseReligion'],
+      ['Church affiliation', 7, 'f_spouseChurch',     '#f_spouseChurch'],
+      ['Educational level',  7, 'f_spouseEdu',        '#f_spouseEdu']
+    ]]);
+  }
+
+  var children = [['Number of children', 8, 'f_childCount', '#f_childCount']];
+  var stated = parseInt(val('f_childCount'), 10) || 0;
+  for (var i = 1; i <= Math.min(5, stated); i++) {
+    children.push(['Child ' + i, 8, 'f_child' + i + 'Name', '#f_child' + i + 'Name']);
+  }
+  children.push(['Number of dependants', 8, 'f_dependantCount', '#f_dependantCount']);
+  children.push(['Names of dependants',  8, 'f_dependantNames', '#f_dependantNames']);
+  groups.push(['Children and dependants', children]);
+
+  return groups;
+}
+
+function readRow(source) {
+  if (typeof source === 'function') return source();
+  if (typeof source === 'object' && source.radio) return radio(source.radio);
+  if (typeof source === 'object' && source.date)  return dateReadable(source.date);
+  return val(source);
+}
+
+function buildReview() {
+  var groups = reviewGroups();
+  var html = '';
+  var blanks = 0;
+
+  for (var g = 0; g < groups.length; g++) {
+    html += '<p class="group">' + groups[g][0] + '</p>';
+    var rows = groups[g][1];
+
+    for (var r = 0; r < rows.length; r++) {
+      var label = rows[r][0];
+      var step  = rows[r][1];
+      var value = readRow(rows[r][2]);
+      var focus = rows[r][3] || '';
+
+      var display, className;
+      if (value === '') {
+        blanks++;
+        display = 'Not filled in';
+        className = 'v blank';
+      } else {
+        display = escapeHtml(value);
+        className = 'v';
+      }
+
+      html += '<button type="button" class="row" '
+            + 'onclick="jumpTo(' + step + ', \'' + focus + '\')">'
+            + '<span class="k">' + escapeHtml(label) + '</span>'
+            + '<span class="' + className + '">' + display + '</span>'
+            + '</button>';
+    }
+  }
+
+  document.getElementById('review').innerHTML = html;
+  document.getElementById('reviewNote').textContent = blanks === 0
+    ? 'Everything is filled in. Tap any line if you want to change it.'
+    : blanks + (blanks === 1 ? ' detail is' : ' details are') + ' still blank. '
+      + 'These are optional, so you can send as is, or tap a blank line to fill it in.';
+}
+
+function jumpTo(step, focusSelector) {
+  returnToReview = true;
+  show(step);
+  if (focusSelector) {
+    var element = document.querySelector(focusSelector);
+    if (element) element.focus();
+  }
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"]/g, function (character) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character];
+  });
+}
+
+/* ---------- stage one: send the details ---------- */
+
+function collect() {
+  var data = {
+    'SURNAME': val('f_surname'),
+    'MIDDLE NAMES': val('f_middle'),
+    'FIRST NAME': val('f_first'),
+    'DATE OF BIRTH': dateValue('f_dob'),
+    'SEX': radio('sex'),
+    'EDUCATIONAL LEVEL': val('f_edu'),
+    'OCCUPATION(S)/PROFESSION(S)': val('f_occupation'),
+    'PLACE OF WORK': val('f_workplace'),
+    'HOMETOWN': val('f_hometown'),
+    'HOMETOWN REGION': val('f_region'),
+    'COUNTRY': val('f_country'),
+    'LANGUAGES SPOKEN': val('f_languages'),
+    'CURRENT POSTAL ADDRESS': val('f_postal'),
+    'CURRENT RESIDENTIAL ADDRESS': val('f_residential'),
+    'DIGITAL ADDRESS': val('f_digital'),
+    'GPS COORDINATES': locationValue,
+    'MAP LINK': mapLink,
+    'PHONE NUMBER': val('f_phone'),
+    'EMAIL ADDRESS': val('f_email'),
+    "FATHER'S NAME": val('f_father'),
+    'FATHER ALIVE OR DECEASED': radio('fatherStatus'),
+    "MOTHER'S NAME": val('f_mother'),
+    'MOTHER ALIVE OR DECEASED': radio('motherStatus'),
+    'CURRENT MARITAL STATUS': radio('marital'),
+    'NUMBER OF CHILDREN': val('f_childCount'),
+    'NUMBER OF DEPENDENTS': val('f_dependantCount'),
+    'NAME(S) OF DEPENDANT(S)': val('f_dependantNames')
+  };
+
+  var spouse = hasSpouse();
+  data['IF MARRIED, TYPE OF MARRIAGE']    = spouse ? radio('marriageType') : '';
+  data['NAME OF SPOUSE / PARTNER']        = spouse ? val('f_spouseName') : '';
+  data["SPOUSE'S DATE OF BIRTH"]          = spouse ? dateValue('f_spouseDob') : '';
+  data["SPOUSE'S OCCUPATION"]             = spouse ? val('f_spouseOccupation') : '';
+  data["SPOUSE'S PLACE OF WORK"]          = spouse ? val('f_spouseWorkplace') : '';
+  data["SPOUSE'S HOMETOWN"]               = spouse ? val('f_spouseHometown') : '';
+  data["SPOUSE'S HOMETOWN REGION"]        = spouse ? val('f_spouseRegion') : '';
+  data["SPOUSE'S HOMETOWN COUNTRY"]       = spouse ? val('f_spouseCountry') : '';
+  data["SPOUSE'S CURRENT POSTAL ADDRESS"] = spouse ? val('f_spousePostal') : '';
+  data["SPOUSE'S RELIGION"]               = spouse ? val('f_spouseReligion') : '';
+  data["SPOUSE'S CHURCH AFFILIATION"]     = spouse ? val('f_spouseChurch') : '';
+  data["SPOUSE'S EDUCATIONAL LEVEL"]      = spouse ? val('f_spouseEdu') : '';
+
+  for (var i = 1; i <= 5; i++) {
+    data['CHILD ' + i + ' NAME']          = val('f_child' + i + 'Name');
+    data['CHILD ' + i + ' DATE OF BIRTH'] = dateValue('f_child' + i + 'Dob');
+  }
+
+  return data;
+}
+
+function sendDetails() {
+  var button = document.getElementById('nextBtn');
+  button.disabled = true;
+  button.textContent = 'Sending, please wait';
+  document.getElementById('backBtn').disabled = true;
+
+  callApi(
+    { action: 'register', data: collect() },
+    function (result) {
+      document.getElementById('backBtn').disabled = false;
+      button.disabled = false;
+
+      if (result.ok) {
+        registrationId = result.id;
+        document.getElementById('savedNote').textContent =
+          'Your details are saved. Registration number ' + result.id + '. One last thing.';
+        show(PHOTO_STEP);
+      } else {
+        warn(result.message);
+        button.textContent = 'Send my details';
+      }
+    },
+    function () {
+      document.getElementById('backBtn').disabled = false;
+      button.disabled = false;
+      button.textContent = 'Send my details';
+      warn('Your details did not send. Check your connection and tap Send again.');
+    }
+  );
+}
+
+/* ---------- stage two: send the photograph ---------- */
+
+function sendPhoto() {
+  if (!photoData) {
+    finishUp('Your details are saved. Please see the media team after service '
+           + 'so they can take your photograph.');
+    return;
+  }
+
+  var button = document.getElementById('nextBtn');
+  button.disabled = true;
+  button.textContent = 'Sending your photo';
+
+  callApi(
+    { action: 'photo', id: registrationId, photo: photoData },
+    function (result) {
+      button.disabled = false;
+      if (result.ok) {
+        finishUp('Thank you. Your details and photograph are both saved.');
+      } else {
+        button.textContent = 'Send my photo';
+        warn(result.message + ' Your details are safe, only the photo failed.');
+      }
+    },
+    function () {
+      button.disabled = false;
+      button.textContent = 'Send my photo';
+      warn('The photo did not send. Your details are safe. Tap to try again, '
+         + 'or see the media team after service.');
+    }
+  );
+}
+
+function finishUp(message) {
+  document.getElementById('doneLine').textContent = message;
+  document.getElementById('refNo').textContent =
+    registrationId ? 'Your registration number: ' + registrationId : '';
+
+  steps[current].classList.remove('active');
+  current = DONE_STEP;
+  steps[current].classList.add('active');
+
+  document.getElementById('bar').style.width = '100%';
+  document.getElementById('counter').textContent = 'Complete';
+  document.querySelector('footer').style.display = 'none';
+  clearWarning();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- after submitting ---------- */
+
+function resetForm() {
+  var fields = document.querySelectorAll('main input, main select, main textarea');
+  for (var i = 0; i < fields.length; i++) {
+    var field = fields[i];
+    if (field.type === 'radio' || field.type === 'checkbox') field.checked = false;
+    else field.value = '';
+  }
+
+  document.getElementById('f_country').value = 'Ghana';
+  document.getElementById('f_spouseCountry').value = 'Ghana';
+  document.getElementById('f_spouseReligion').value = 'Christian';
+  document.getElementById('f_spouseChurch').value = 'Assemblies of God';
+  document.getElementById('f_childCount').value = '0';
+  document.getElementById('f_dependantCount').value = '0';
+  document.getElementById('childBoxes').innerHTML = '';
+
+  photoData = '';
+  registrationId = '';
+  locationValue = '';
+  mapLink = '';
+
+  var target = document.getElementById('target');
+  target.className = 'target';
+  target.innerHTML = CAMERA_ICON;
+  document.querySelector('.camera .hint').textContent =
+    'Face the light. Plain wall behind you. Head and shoulders only.';
+
+  var locState = document.getElementById('locState');
+  locState.className = 'locstate';
+  locState.textContent = 'Only tap this if you are at home now. '
+                       + 'It helps the church visitation team find you.';
+  document.getElementById('locBtn').textContent = 'Use my current location';
+  document.getElementById('locBtn').disabled = false;
+
+  returnToReview = false;
+  clearWarning();
+
+  document.querySelector('footer').style.display = '';
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('backBtn').disabled = false;
+
+  steps[current].classList.remove('active');
+  show(0);
+  steps[0].classList.add('active');
+}
+
+function finish() {
+  try { window.top.close(); } catch (error) { /* browsers usually block this */ }
+
+  window.setTimeout(function () {
+    document.getElementById('doneTitle').textContent = 'All done';
+    document.getElementById('doneLine').textContent = 'You can now close this page. Thank you.';
+    document.getElementById('doneActions').style.display = 'none';
+  }, 250);
+}
+
+/* ---------- start ---------- */
+buildRegions();
+buildAllDates();
+show(0);
+</script>
+</body>
+</html>
