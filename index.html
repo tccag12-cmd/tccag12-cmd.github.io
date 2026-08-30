@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Assemblies of God T.C.C -Membership Registration</title>
+<title>T.C.C Assemblies of God - Membership Registration</title>
 <style>
   :root {
     --pine:    #0F3D3E;
@@ -210,6 +210,8 @@
     <!-- 0 WELCOME -->
     <section class="step active">
       <h2>Welcome home</h2>
+      <p class="lead">Kindly assist us in filling the following details towards the
+        compilation of the new church database and membership renewal.</p>
       <p class="lead">This takes about five minutes. You will need your phone number, and
         your camera at the end for a photograph.</p>
       <p class="lead">Registering for a parent or grandparent? Please do. Fill it in with
@@ -254,16 +256,8 @@
       </div>
 
       <div class="field">
-        <label for="f_edu">Educational level</label>
-        <select id="f_edu">
-          <option value="">Choose one</option>
-          <option>Non-Literate</option>
-          <option>Informal Skill Training (Apprenticeship)</option>
-          <option>Basic (Primary, Middle, J.H.S)</option>
-          <option>Secondary, Technical or Vocational</option>
-          <option>Tertiary</option>
-          <option>Other</option>
-        </select>
+        <label>Educational level <span class="opt">(tick all that apply)</span></label>
+        <div class="choices" id="educationList"></div>
       </div>
 
       <div class="field">
@@ -376,7 +370,7 @@
       <p class="lead">Choose the one that applies to you today.</p>
       <div class="field">
         <div class="choices">
-          <label class="choice"><input type="radio" name="marital" value="Single"><span class="ctitle">Single</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Single/Unmarried"><span class="ctitle">Single or unmarried</span></label>
           <label class="choice"><input type="radio" name="marital" value="Married"><span class="ctitle">Married</span></label>
           <label class="choice"><input type="radio" name="marital" value="Divorced"><span class="ctitle">Divorced</span></label>
           <label class="choice"><input type="radio" name="marital" value="Separated"><span class="ctitle">Separated</span></label>
@@ -384,6 +378,11 @@
           <label class="choice"><input type="radio" name="marital" value="Divorced and Remarried"><span class="ctitle">Divorced and remarried</span></label>
           <label class="choice"><input type="radio" name="marital" value="Widowed and Remarried"><span class="ctitle">Widowed and remarried</span></label>
           <label class="choice"><input type="radio" name="marital" value="Co-habiting"><span class="ctitle">Co-habiting</span></label>
+          <label class="choice"><input type="radio" name="marital" value="Other"><span class="ctitle">Other</span></label>
+        </div>
+        <div class="followup" id="maritalOtherBox">
+          <label for="f_maritalOther">Please describe</label>
+          <input type="text" id="f_maritalOther">
         </div>
       </div>
     </section>
@@ -673,6 +672,10 @@ var DEPARTMENTS = ["Men's Ministry", "Women's Ministry", 'Youth Ministry',
   'Kingdom Praise', 'Sound and Technical', 'Media', 'Ushering and Protocol',
   'Organising Team'];
 
+var EDUCATION = ['Non-Literate', 'Informal Skill Training (Apprenticeship)',
+  'Basic (Primary, Middle, J.H.S)', 'Secondary, Technical or Vocational',
+  'Tertiary', 'Other'];
+
 var CAMERA_ICON = document.getElementById('target').innerHTML;
 
 function val(id)   { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -707,6 +710,31 @@ function buildDepartments() {
           + '<span class="ctitle">' + DEPARTMENTS[i] + '</span></label>';
   }
   document.getElementById('departmentList').innerHTML = html;
+}
+
+/** Education allows more than one answer, matching the original paper form. */
+function buildEducation() {
+  var html = '';
+  for (var i = 0; i < EDUCATION.length; i++) {
+    html += '<label class="choice">'
+          + '<input type="checkbox" name="education" value="' + EDUCATION[i] + '">'
+          + '<span class="ctitle">' + EDUCATION[i] + '</span></label>';
+  }
+  document.getElementById('educationList').innerHTML = html;
+}
+
+function checkedList(name) {
+  var boxes = document.querySelectorAll('input[name="' + name + '"]:checked');
+  var picked = [];
+  for (var i = 0; i < boxes.length; i++) picked.push(boxes[i].value);
+  return picked.join('; ');
+}
+
+/** Marital status, with the typed description when Other is chosen. */
+function maritalValue() {
+  var chosen = radio('marital');
+  if (chosen !== 'Other') return chosen;
+  return val('f_maritalOther') || 'Other';
 }
 
 /**
@@ -760,19 +788,25 @@ function toggleFollowups() {
           .classList.toggle('show', radio('baptised') === 'Yes');
   document.getElementById('titheReasonBox')
           .classList.toggle('show', radio('tithe') === 'No');
+  document.getElementById('maritalOtherBox')
+          .classList.toggle('show', radio('marital') === 'Other');
+}
+
+/** Marital radios are built into the page, so wire them up once at start. */
+function watchMarital() {
+  var radios = document.querySelectorAll('input[name="marital"]');
+  for (var i = 0; i < radios.length; i++) {
+    radios[i].addEventListener('change', toggleFollowups);
+  }
 }
 
 /* ---------- departments ---------- */
 
 function departmentList() {
-  var boxes = document.querySelectorAll('input[name="department"]:checked');
-  var picked = [];
-  for (var i = 0; i < boxes.length; i++) picked.push(boxes[i].value);
-
+  var picked = checkedList('department');
   var other = val('f_departmentOther');
-  if (other) picked.push(other);
-
-  return picked.join('; ');
+  if (!other) return picked;
+  return picked ? picked + '; ' + other : other;
 }
 
 /* ---------- Ghana Post digital address mask ---------- */
@@ -893,9 +927,15 @@ function stepIsValid() {
     if (!val('f_surname')) { warn('Please enter your surname.'); return false; }
     if (!val('f_first'))   { warn('Please enter your first name.'); return false; }
   }
-  if (current === 2 && !val('f_edu')) {
-    warn('Please choose your educational level.');
-    return false;
+  if (current === 2) {
+    if (!dateValue('f_dob')) {
+      warn('Please choose your date of birth. All three boxes are needed.');
+      return false;
+    }
+    if (!checkedList('education')) {
+      warn('Please tick at least one educational level.');
+      return false;
+    }
   }
   if (current === 4) {
     var digits = val('f_phone').replace(/[^0-9]/g, '');
@@ -989,7 +1029,7 @@ function reviewGroups() {
     ['About you', [
       ['Date of birth',     2, {date: 'f_dob'},  '#f_dob_d'],
       ['Sex',               2, {radio: 'sex'},   'input[name="sex"]'],
-      ['Educational level', 2, 'f_edu',          '#f_edu'],
+      ['Educational level', 2, function () { return checkedList('education'); }, 'input[name="education"]'],
       ['Occupation',        2, 'f_occupation',   '#f_occupation'],
       ['Place of work',     2, 'f_workplace',    '#f_workplace']
     ]],
@@ -1014,7 +1054,7 @@ function reviewGroups() {
       ['Mother',        5, {radio: 'motherStatus'}, 'input[name="motherStatus"]']
     ]],
     ['Marital status', [
-      ['Marital status', 6, {radio: 'marital'}, 'input[name="marital"]']
+      ['Marital status', 6, function () { return maritalValue(); }, 'input[name="marital"]']
     ]]
   ];
 
@@ -1044,13 +1084,20 @@ function reviewGroups() {
   children.push(['Names of dependants',  8, 'f_dependantNames', '#f_dependantNames']);
   groups.push(['Children and dependants', children]);
 
-  groups.push(['Your walk with God', [
-    ['Baptised by immersion', 9, {radio: 'baptised'},  'input[name="baptised"]'],
-    ['Church of baptism',     9, 'f_baptismChurch',    '#f_baptismChurch'],
-    ['Holy Ghost baptism',    9, {radio: 'holyGhost'}, 'input[name="holyGhost"]'],
-    ['Tithe paying member',   9, {radio: 'tithe'},     'input[name="tithe"]'],
-    ['Reason given',          9, 'f_titheReason',      '#f_titheReason']
-  ]]);
+  // Follow-up rows only appear when the answer above them called for a box.
+  // Otherwise the review would nag about a field that was never shown.
+  var faith = [
+    ['Baptised by immersion', 9, {radio: 'baptised'}, 'input[name="baptised"]']
+  ];
+  if (radio('baptised') === 'Yes') {
+    faith.push(['Church of baptism', 9, 'f_baptismChurch', '#f_baptismChurch']);
+  }
+  faith.push(['Holy Ghost baptism',  9, {radio: 'holyGhost'}, 'input[name="holyGhost"]']);
+  faith.push(['Tithe paying member', 9, {radio: 'tithe'},     'input[name="tithe"]']);
+  if (radio('tithe') === 'No') {
+    faith.push(['Reason given', 9, 'f_titheReason', '#f_titheReason']);
+  }
+  groups.push(['Your walk with God', faith]);
 
   groups.push(['Serving in church', [
     ['Departments', 10, function () { return departmentList(); }, 'input[name="department"]']
@@ -1130,7 +1177,7 @@ function collect() {
     'FIRST NAME': val('f_first'),
     'DATE OF BIRTH': dateValue('f_dob'),
     'SEX': radio('sex'),
-    'EDUCATIONAL LEVEL': val('f_edu'),
+    'EDUCATIONAL LEVEL': checkedList('education'),
     'OCCUPATION(S)/PROFESSION(S)': val('f_occupation'),
     'PLACE OF WORK': val('f_workplace'),
     'HOMETOWN': val('f_hometown'),
@@ -1148,7 +1195,7 @@ function collect() {
     'FATHER ALIVE OR DECEASED': radio('fatherStatus'),
     "MOTHER'S NAME": val('f_mother'),
     'MOTHER ALIVE OR DECEASED': radio('motherStatus'),
-    'CURRENT MARITAL STATUS': radio('marital'),
+    'CURRENT MARITAL STATUS': maritalValue(),
     'NUMBER OF CHILDREN': val('f_childCount'),
     'NUMBER OF DEPENDENTS': val('f_dependantCount'),
     'NAME(S) OF DEPENDANT(S)': val('f_dependantNames'),
@@ -1382,7 +1429,9 @@ function finish() {
 /* ---------- start ---------- */
 buildRegions();
 buildDepartments();
+buildEducation();
 buildAllDates();
+watchMarital();
 toggleFollowups();
 show(0);
 </script>
