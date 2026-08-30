@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Assemblies of God, TCC - Membership Registration</title>
+<title>Assemblies of God Ghana, Tema Christian Centre - Membership Registration</title>
 <style>
   :root {
     --pine:    #0F3D3E;
@@ -299,7 +299,12 @@
 
       <div class="field">
         <label for="f_phone">Phone number</label>
-        <input type="tel" id="f_phone" placeholder="024 123 4567" autocomplete="tel">
+        <input type="tel" id="f_phone" placeholder="024 794 6567" autocomplete="tel" maxlength="12">
+      </div>
+      <div class="field">
+        <label for="f_phone2">Second phone number <span class="opt">(optional)</span></label>
+        <input type="tel" id="f_phone2" placeholder="055 123 4567" maxlength="12">
+        <p class="datehint">Many people carry two lines. Add the other one here if you have it.</p>
       </div>
 
       <div class="emailbox">
@@ -486,12 +491,15 @@
       </div>
       <div id="childBoxes"></div>
       <div class="field">
-        <label for="f_dependantCount">Number of dependants <span class="opt">(optional)</span></label>
+        <label for="f_dependantCount">Number of other dependants <span class="opt">(optional)</span></label>
         <input type="number" id="f_dependantCount" min="0" max="20" value="0">
       </div>
       <div class="field">
         <label for="f_dependantNames">Names of dependants <span class="opt">(optional)</span></label>
         <textarea id="f_dependantNames" placeholder="One name per line"></textarea>
+        <p class="datehint">Grandchildren, great-grandchildren, wards, and anyone else
+          in your care belong here. Add their relationship beside the name if you can,
+          for example: Kojo Boateng, grandson.</p>
       </div>
     </section>
 
@@ -614,7 +622,7 @@
    PASTE YOUR WEB APP URL HERE.
    Apps Script > Deploy > Manage deployments > Copy. It ends in /exec.
    ------------------------------------------------------------------ */
-var API = 'https://script.google.com/macros/s/AKfycby3n41R0pEc_QesRSZxZntIzzUyHRPvGEldvbefeCTCCaOSWlrhZsevwtlJhD_2atgC/exec';
+var API = 'PASTE_YOUR_EXEC_URL_HERE';
 
 /**
  * Sends a request to the Apps Script backend.
@@ -809,6 +817,39 @@ function departmentList() {
   return picked ? picked + '; ' + other : other;
 }
 
+/* ---------- Ghana phone numbers ---------- */
+
+/**
+ * Returns the number as ten digits starting with zero, or an empty string
+ * if it is not a valid Ghana mobile number.
+ *   024 794 6567 / 247946567 / +233 24 794 6567  ->  0247946567
+ */
+function ghanaPhone(value) {
+  var digits = String(value || '').replace(/[^0-9]/g, '');
+
+  if (digits.length === 12 && digits.indexOf('233') === 0) digits = '0' + digits.slice(3);
+  else if (digits.length === 9) digits = '0' + digits;
+
+  if (digits.length === 10 && digits.charAt(0) === '0') return digits;
+  return '';
+}
+
+/** Groups the digits as 024 794 6567 while the person types. */
+function maskPhone(box) {
+  var digits = box.value.replace(/[^0-9]/g, '');
+
+  if (digits.length > 10 && digits.indexOf('233') === 0) digits = '0' + digits.slice(3);
+  digits = digits.substring(0, 10);
+
+  var out = digits.substring(0, 3);
+  if (digits.length > 3) out += ' ' + digits.substring(3, 6);
+  if (digits.length > 6) out += ' ' + digits.substring(6, 10);
+  box.value = out;
+}
+
+document.getElementById('f_phone').addEventListener('input', function () { maskPhone(this); });
+document.getElementById('f_phone2').addEventListener('input', function () { maskPhone(this); });
+
 /* ---------- Ghana Post digital address mask ---------- */
 
 document.getElementById('f_digital').addEventListener('input', function () {
@@ -898,7 +939,7 @@ document.getElementById('galleryInput').addEventListener('change', handlePhoto);
 
 document.getElementById('f_childCount').addEventListener('input', function () {
   var stated = Math.max(0, parseInt(this.value, 10) || 0);
-  var count = Math.min(5, stated);
+  var count = Math.min(7, stated);
   var box = document.getElementById('childBoxes');
   if (box.querySelectorAll('.child').length === count) return;
 
@@ -912,9 +953,9 @@ document.getElementById('f_childCount').addEventListener('input', function () {
           + '<div class="dateparts" data-date="f_child' + i + 'Dob" data-from="1950"></div>'
           + '</div></div>';
   }
-  if (stated > 5) {
-    html += '<p class="hint">The form records the first five children. '
-          + 'Please give the media team the remaining names.</p>';
+  if (stated > 7) {
+    html += '<p class="hint">The form records the first seven children by name. '
+          + 'Please add any others in the family and dependants box below.</p>';
   }
   box.innerHTML = html;
   buildAllDates();
@@ -938,8 +979,20 @@ function stepIsValid() {
     }
   }
   if (current === 4) {
-    var digits = val('f_phone').replace(/[^0-9]/g, '');
-    if (digits.length < 9) { warn('Please enter a valid phone number.'); return false; }
+    if (!ghanaPhone(val('f_phone'))) {
+      warn('Please enter a valid phone number. Ten digits starting with 0, '
+         + 'for example 024 794 6567.');
+      return false;
+    }
+    var second = val('f_phone2');
+    if (second && !ghanaPhone(second)) {
+      warn('The second phone number is not complete. Finish it, or clear the box.');
+      return false;
+    }
+    if (second && ghanaPhone(second) === ghanaPhone(val('f_phone'))) {
+      warn('Both phone numbers are the same. Change the second one, or clear it.');
+      return false;
+    }
     var email = val('f_email');
     if (email && email.indexOf('@') === -1) {
       warn('That email address does not look right. Correct it, or clear it.');
@@ -1041,6 +1094,7 @@ function reviewGroups() {
     ]],
     ['How we reach you', [
       ['Phone number',        4, 'f_phone',       '#f_phone'],
+      ['Second phone number', 4, 'f_phone2',      '#f_phone2'],
       ['Email for a copy',    4, 'f_email',       '#f_email'],
       ['Residential address', 4, 'f_residential', '#f_residential'],
       ['Digital address',     4, 'f_digital',     '#f_digital'],
@@ -1077,7 +1131,7 @@ function reviewGroups() {
 
   var children = [['Number of children', 8, 'f_childCount', '#f_childCount']];
   var stated = parseInt(val('f_childCount'), 10) || 0;
-  for (var i = 1; i <= Math.min(5, stated); i++) {
+  for (var i = 1; i <= Math.min(7, stated); i++) {
     children.push(['Child ' + i, 8, 'f_child' + i + 'Name', '#f_child' + i + 'Name']);
   }
   children.push(['Number of dependants', 8, 'f_dependantCount', '#f_dependantCount']);
@@ -1190,6 +1244,7 @@ function collect() {
     'GPS COORDINATES': locationValue,
     'MAP LINK': mapLink,
     'PHONE NUMBER': val('f_phone'),
+    'SECOND PHONE NUMBER': val('f_phone2'),
     'EMAIL ADDRESS': val('f_email'),
     "FATHER'S NAME": val('f_father'),
     'FATHER ALIVE OR DECEASED': radio('fatherStatus'),
@@ -1221,7 +1276,7 @@ function collect() {
   data["SPOUSE'S CHURCH AFFILIATION"]     = spouse ? val('f_spouseChurch') : '';
   data["SPOUSE'S EDUCATIONAL LEVEL"]      = spouse ? val('f_spouseEdu') : '';
 
-  for (var i = 1; i <= 5; i++) {
+  for (var i = 1; i <= 7; i++) {
     data['CHILD ' + i + ' NAME']          = val('f_child' + i + 'Name');
     data['CHILD ' + i + ' DATE OF BIRTH'] = dateValue('f_child' + i + 'Dob');
   }
