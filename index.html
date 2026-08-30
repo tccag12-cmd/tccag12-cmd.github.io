@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T.C.C Assemblies of God - Membership Registration</title>
 <style>
   :root {
     --pine:    #0F3D3E;
@@ -18,12 +19,9 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
   body {
-    margin: 0;
-    background: var(--surface);
-    color: var(--ink);
+    margin: 0; background: var(--surface); color: var(--ink);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 17px;
-    line-height: 1.5;
+    font-size: 17px; line-height: 1.5;
   }
 
   .frame {
@@ -32,16 +30,12 @@
   }
 
   .progress { height: 5px; background: var(--line); flex: none; }
-  .progress span {
-    display: block; height: 100%; width: 0;
-    background: var(--brass); transition: width .3s ease;
-  }
+  .progress span { display: block; height: 100%; width: 0; background: var(--brass); transition: width .3s ease; }
 
   header { padding: 18px 22px 14px; border-bottom: 1px solid var(--line); flex: none; }
   .church {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 15px; letter-spacing: .06em; text-transform: uppercase;
-    color: var(--pine); margin: 0;
+    font-family: Georgia, "Times New Roman", serif; font-size: 15px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--pine); margin: 0;
   }
   .counter { font-size: 13px; color: var(--muted); margin: 3px 0 0; }
 
@@ -55,15 +49,15 @@
   }
 
   h2 {
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 27px; line-height: 1.25; margin: 0 0 6px;
-    color: var(--pine); font-weight: 400;
+    font-family: Georgia, "Times New Roman", serif; font-size: 27px; line-height: 1.25;
+    margin: 0 0 6px; color: var(--pine); font-weight: 400;
   }
   .lead { color: var(--muted); margin: 0 0 24px; font-size: 15.5px; }
 
   .field { margin-bottom: 20px; }
   label { display: block; font-size: 14px; font-weight: 600; letter-spacing: .02em; margin-bottom: 7px; }
   .opt { font-weight: 400; color: var(--muted); }
+  .qtext { font-size: 16px; font-weight: 600; margin-bottom: 10px; line-height: 1.4; }
 
   input[type=text], input[type=tel], input[type=email],
   input[type=number], select, textarea {
@@ -76,17 +70,15 @@
   }
   textarea { min-height: 88px; resize: vertical; }
 
-  /* ---- date as three plain dropdowns ---- */
   .dateparts { display: grid; grid-template-columns: 1fr 1.5fr 1.2fr; gap: 8px; }
   .dateparts select { padding: 14px 8px; font-size: 16px; }
   .datehint { font-size: 13.5px; color: var(--muted); margin: 7px 0 0; }
 
-  /* ---- choice cards ---- */
   .choices { display: grid; gap: 9px; }
   .choice {
-    display: flex; align-items: flex-start; gap: 12px;
-    padding: 14px 15px; border: 1.5px solid var(--line);
-    border-radius: 10px; cursor: pointer; font-size: 16.5px; font-weight: 400;
+    display: flex; align-items: flex-start; gap: 12px; padding: 14px 15px;
+    border: 1.5px solid var(--line); border-radius: 10px;
+    cursor: pointer; font-size: 16.5px; font-weight: 400;
   }
   .choice input { accent-color: var(--pine); width: 20px; height: 20px; flex: none; margin-top: 2px; }
   .choice:has(input:checked) { border-color: var(--pine); background: #F0F5F3; }
@@ -95,10 +87,24 @@
   .ctitle { display: block; font-weight: 600; }
   .cnote { display: block; font-size: 14px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
 
-  /* ---- photo ---- */
+  /* revealed only when the answer calls for it */
+  .followup { display: none; margin-top: 16px; padding-left: 14px; border-left: 3px solid var(--brass); }
+  .followup.show { display: block; }
+
+  /* the email panel, deliberately set apart */
+  .emailbox {
+    background: #F0F5F3; border: 1.5px solid var(--pine);
+    border-radius: 12px; padding: 17px; margin-bottom: 22px;
+  }
+  .emailbox h3 {
+    margin: 0 0 6px; font-size: 16.5px; color: var(--pine);
+    font-family: Georgia, serif; font-weight: 400;
+  }
+  .emailbox p { margin: 0 0 12px; font-size: 14.5px; color: var(--muted); line-height: 1.45; }
+
   .target {
-    width: 210px; height: 210px; margin: 6px auto 20px;
-    border-radius: 50%; border: 3px dashed var(--brass); background: var(--surface);
+    width: 210px; height: 210px; margin: 6px auto 20px; border-radius: 50%;
+    border: 3px dashed var(--brass); background: var(--surface);
     display: flex; align-items: center; justify-content: center; flex-direction: column;
     overflow: hidden; cursor: pointer;
   }
@@ -112,12 +118,8 @@
     display: inline; font-size: 14.5px; font-weight: 600;
     color: var(--pine); text-decoration: underline; cursor: pointer;
   }
-  .offscreen {
-    position: absolute; width: 1px; height: 1px;
-    opacity: 0; overflow: hidden; border: 0; padding: 0;
-  }
+  .offscreen { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; border: 0; padding: 0; }
 
-  /* ---- location ---- */
   .locbtn {
     width: 100%; padding: 14px; font-size: 16px; font-family: inherit; font-weight: 600;
     color: var(--pine); background: var(--paper);
@@ -133,7 +135,6 @@
     text-transform: uppercase; color: var(--muted);
   }
 
-  /* ---- review ---- */
   .note {
     font-size: 15px; color: var(--muted); background: var(--surface);
     padding: 12px 14px; border-radius: 9px; margin: 0 0 20px;
@@ -300,23 +301,29 @@
     <!-- 4 CONTACT -->
     <section class="step">
       <h2>How we reach you</h2>
-      <p class="lead">Your phone number is how we identify your record, so please check it.</p>
+      <p class="lead">Your phone number is how the church identifies your record, so please check it.</p>
 
       <div class="field">
         <label for="f_phone">Phone number</label>
         <input type="tel" id="f_phone" placeholder="024 123 4567" autocomplete="tel">
       </div>
-      <div class="field">
+
+      <div class="emailbox">
+        <h3>Would you like a copy by email?</h3>
+        <p>Enter your email address and we will send you everything you have filled in,
+           along with your registration number, as soon as you submit. Leave it blank
+           if you would rather not receive anything.</p>
         <label for="f_email">Email address <span class="opt">(optional)</span></label>
-        <input type="email" id="f_email" autocomplete="email" placeholder="For your confirmation message">
+        <input type="email" id="f_email" autocomplete="email" placeholder="yourname@example.com">
       </div>
+
       <div class="field">
         <label for="f_residential">Residential address or house number <span class="opt">(optional)</span></label>
         <input type="text" id="f_residential">
       </div>
       <div class="field">
         <label for="f_digital">Ghana Post digital address <span class="opt">(optional)</span></label>
-        <input type="text" id="f_digital" placeholder="GA-123-4567" inputmode="text" maxlength="11">
+        <input type="text" id="f_digital" placeholder="GA-123-4567" maxlength="11">
         <p class="datehint">The dashes are added for you as you type.</p>
       </div>
       <div class="field">
@@ -489,7 +496,65 @@
       </div>
     </section>
 
-    <!-- 9 REVIEW -->
+    <!-- 9 FAITH -->
+    <section class="step">
+      <h2>Your walk with God</h2>
+      <p class="lead">These help the pastoral team know how best to walk with you.</p>
+
+      <div class="field">
+        <p class="qtext">Have you been baptised by immersion?</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="baptised" value="Yes" onchange="toggleFollowups()"><span class="ctitle">Yes</span></label>
+          <label class="choice"><input type="radio" name="baptised" value="No" onchange="toggleFollowups()"><span class="ctitle">No</span></label>
+          <label class="choice"><input type="radio" name="baptised" value="Not sure" onchange="toggleFollowups()"><span class="ctitle">I am not sure</span></label>
+        </div>
+        <div class="followup" id="baptismChurchBox">
+          <label for="f_baptismChurch">In which church were you baptised?</label>
+          <input type="text" id="f_baptismChurch" placeholder="Name of the church">
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="qtext">Have you received the baptism of the Holy Ghost, with the initial
+          evidence of speaking in tongues?</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="holyGhost" value="Yes"><span class="ctitle">Yes</span></label>
+          <label class="choice"><input type="radio" name="holyGhost" value="No"><span class="ctitle">No</span></label>
+          <label class="choice"><input type="radio" name="holyGhost" value="Not sure"><span class="ctitle">I am not sure</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <p class="qtext">Are you a tithe paying member?</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="tithe" value="Yes" onchange="toggleFollowups()"><span class="ctitle">Yes</span></label>
+          <label class="choice"><input type="radio" name="tithe" value="No" onchange="toggleFollowups()"><span class="ctitle">No</span></label>
+        </div>
+        <div class="followup" id="titheReasonBox">
+          <label for="f_titheReason">If it is something you are willing to share, what is the reason?
+            <span class="opt">(optional)</span></label>
+          <textarea id="f_titheReason" placeholder="You may leave this blank"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10 DEPARTMENTS -->
+    <section class="step">
+      <h2>Serving in church</h2>
+      <p class="lead">Tick every department or ministry you are part of. Tick none if you
+        are not currently serving.</p>
+
+      <div class="field">
+        <div class="choices" id="departmentList"></div>
+      </div>
+
+      <div class="field">
+        <label for="f_departmentOther">Anything not listed above <span class="opt">(optional)</span></label>
+        <input type="text" id="f_departmentOther" placeholder="Name of the group">
+      </div>
+    </section>
+
+    <!-- 11 REVIEW -->
     <section class="step">
       <h2>Check before you send</h2>
       <p class="lead">Tap any line to change it.</p>
@@ -497,7 +562,7 @@
       <div class="review" id="review"></div>
     </section>
 
-    <!-- 10 PHOTO (after the details are saved) -->
+    <!-- 12 PHOTO (after the details are saved) -->
     <section class="step camera">
       <div class="saved" id="savedNote">Your details are saved. One last thing.</div>
       <h2>Your photograph</h2>
@@ -517,7 +582,7 @@
       <input type="file" id="galleryInput" accept="image/*" class="offscreen">
     </section>
 
-    <!-- 11 DONE -->
+    <!-- 13 DONE -->
     <section class="step">
       <div class="done">
         <div class="tick">
@@ -529,6 +594,8 @@
         <p class="lead" id="doneLine">Thank you. Your details are with the media team.</p>
         <p class="refno" id="refNo"></p>
         <div class="doneActions" id="doneActions">
+          <button class="ghost" onclick="startEditing()">Edit my details</button>
+          <button class="ghost" onclick="retakePhoto()">Change my photograph</button>
           <button class="primary" onclick="resetForm()">Register another person</button>
           <button class="ghost" onclick="finish()">I am finished</button>
         </div>
@@ -548,7 +615,7 @@
    PASTE YOUR WEB APP URL HERE.
    Apps Script > Deploy > Manage deployments > Copy. It ends in /exec.
    ------------------------------------------------------------------ */
-var API = 'https://script.google.com/macros/s/AKfycby3n41R0pEc_QesRSZxZntIzzUyHRPvGEldvbefeCTCCaOSWlrhZsevwtlJhD_2atgC/exec';
+var API = 'PASTE_YOUR_EXEC_URL_HERE';
 
 /**
  * Sends a request to the Apps Script backend.
@@ -584,11 +651,13 @@ var returnToReview = false;
 var registrationId = '';
 var locationValue = '';
 var mapLink = '';
+var isEditing = false;
+var hasPhotoOnFile = false;
 
 var SPOUSE_STEP = 7;
-var REVIEW_STEP = 9;
-var PHOTO_STEP  = 10;
-var DONE_STEP   = 11;
+var REVIEW_STEP = 11;
+var PHOTO_STEP  = 12;
+var DONE_STEP   = 13;
 
 var MARRIED = ['Married', 'Divorced and Remarried', 'Widowed and Remarried', 'Co-habiting'];
 
@@ -598,6 +667,11 @@ var REGIONS = ['Ahafo','Ashanti','Bono','Bono East','Central','Eastern','Greater
 
 var MONTHS = ['January','February','March','April','May','June',
   'July','August','September','October','November','December'];
+
+var DEPARTMENTS = ["Men's Ministry", "Women's Ministry", 'Youth Ministry',
+  'Joy Fellowship', 'Ys Fellowship', 'Royal Rangers', 'Missionette', 'Pathfinders',
+  'Kingdom Praise', 'Sound and Technical', 'Media', 'Ushering and Protocol',
+  'Organising Team'];
 
 var CAMERA_ICON = document.getElementById('target').innerHTML;
 
@@ -620,11 +694,19 @@ function clearWarning() { document.getElementById('alert').classList.remove('sho
 
 function buildRegions() {
   var html = '<option value="">Choose one</option>';
-  for (var i = 0; i < REGIONS.length; i++) {
-    html += '<option>' + REGIONS[i] + '</option>';
-  }
+  for (var i = 0; i < REGIONS.length; i++) html += '<option>' + REGIONS[i] + '</option>';
   var lists = document.querySelectorAll('select.regions');
   for (var j = 0; j < lists.length; j++) lists[j].innerHTML = html;
+}
+
+function buildDepartments() {
+  var html = '';
+  for (var i = 0; i < DEPARTMENTS.length; i++) {
+    html += '<label class="choice">'
+          + '<input type="checkbox" name="department" value="' + DEPARTMENTS[i] + '">'
+          + '<span class="ctitle">' + DEPARTMENTS[i] + '</span></label>';
+  }
+  document.getElementById('departmentList').innerHTML = html;
 }
 
 /**
@@ -658,7 +740,6 @@ function buildAllDates() {
   }
 }
 
-/** Returns YYYY-MM-DD, or '' if the date is not complete. */
 function dateValue(id) {
   var d = val(id + '_d'), m = val(id + '_m'), y = val(id + '_y');
   if (!d || !m || !y) return '';
@@ -666,11 +747,32 @@ function dateValue(id) {
 }
 function pad(n) { return (String(n).length < 2 ? '0' : '') + n; }
 
-/** Human readable version for the review screen. */
 function dateReadable(id) {
   var d = val(id + '_d'), m = val(id + '_m'), y = val(id + '_y');
   if (!d || !m || !y) return '';
   return d + ' ' + MONTHS[parseInt(m, 10) - 1] + ' ' + y;
+}
+
+/* ---------- conditional follow-up questions ---------- */
+
+function toggleFollowups() {
+  document.getElementById('baptismChurchBox')
+          .classList.toggle('show', radio('baptised') === 'Yes');
+  document.getElementById('titheReasonBox')
+          .classList.toggle('show', radio('tithe') === 'No');
+}
+
+/* ---------- departments ---------- */
+
+function departmentList() {
+  var boxes = document.querySelectorAll('input[name="department"]:checked');
+  var picked = [];
+  for (var i = 0; i < boxes.length; i++) picked.push(boxes[i].value);
+
+  var other = val('f_departmentOther');
+  if (other) picked.push(other);
+
+  return picked.join('; ');
 }
 
 /* ---------- Ghana Post digital address mask ---------- */
@@ -869,8 +971,9 @@ function show(index) {
   document.getElementById('nextBtn').textContent =
     returnToReview ? 'Back to check'
       : current === 0 ? 'Start'
-      : current === REVIEW_STEP ? 'Send my details'
-      : current === PHOTO_STEP ? (photoData ? 'Send my photo' : 'Skip for now')
+      : current === REVIEW_STEP ? (isEditing ? 'Save my changes' : 'Send my details')
+      : current === PHOTO_STEP ? (photoData ? 'Send my photo'
+                                            : (hasPhotoOnFile ? 'Keep my current photo' : 'Skip for now'))
       : 'Next';
 }
 
@@ -898,7 +1001,7 @@ function reviewGroups() {
     ]],
     ['How we reach you', [
       ['Phone number',        4, 'f_phone',       '#f_phone'],
-      ['Email address',       4, 'f_email',       '#f_email'],
+      ['Email for a copy',    4, 'f_email',       '#f_email'],
       ['Residential address', 4, 'f_residential', '#f_residential'],
       ['Digital address',     4, 'f_digital',     '#f_digital'],
       ['Postal address',      4, 'f_postal',      '#f_postal'],
@@ -940,6 +1043,18 @@ function reviewGroups() {
   children.push(['Number of dependants', 8, 'f_dependantCount', '#f_dependantCount']);
   children.push(['Names of dependants',  8, 'f_dependantNames', '#f_dependantNames']);
   groups.push(['Children and dependants', children]);
+
+  groups.push(['Your walk with God', [
+    ['Baptised by immersion', 9, {radio: 'baptised'},  'input[name="baptised"]'],
+    ['Church of baptism',     9, 'f_baptismChurch',    '#f_baptismChurch'],
+    ['Holy Ghost baptism',    9, {radio: 'holyGhost'}, 'input[name="holyGhost"]'],
+    ['Tithe paying member',   9, {radio: 'tithe'},     'input[name="tithe"]'],
+    ['Reason given',          9, 'f_titheReason',      '#f_titheReason']
+  ]]);
+
+  groups.push(['Serving in church', [
+    ['Departments', 10, function () { return departmentList(); }, 'input[name="department"]']
+  ]]);
 
   return groups;
 }
@@ -1006,7 +1121,7 @@ function escapeHtml(text) {
   });
 }
 
-/* ---------- stage one: send the details ---------- */
+/* ---------- gather everything ---------- */
 
 function collect() {
   var data = {
@@ -1036,7 +1151,13 @@ function collect() {
     'CURRENT MARITAL STATUS': radio('marital'),
     'NUMBER OF CHILDREN': val('f_childCount'),
     'NUMBER OF DEPENDENTS': val('f_dependantCount'),
-    'NAME(S) OF DEPENDANT(S)': val('f_dependantNames')
+    'NAME(S) OF DEPENDANT(S)': val('f_dependantNames'),
+    'BAPTISED BY IMMERSION': radio('baptised'),
+    'CHURCH OF BAPTISM': radio('baptised') === 'Yes' ? val('f_baptismChurch') : '',
+    'HOLY GHOST BAPTISM WITH TONGUES': radio('holyGhost'),
+    'TITHE PAYING MEMBER': radio('tithe'),
+    'REASON FOR NOT TITHING': radio('tithe') === 'No' ? val('f_titheReason') : '',
+    'DEPARTMENTS / MINISTRIES': departmentList()
   };
 
   var spouse = hasSpouse();
@@ -1061,33 +1182,47 @@ function collect() {
   return data;
 }
 
+/* ---------- stage one: send or update the details ---------- */
+
 function sendDetails() {
   var button = document.getElementById('nextBtn');
+  var backBtn = document.getElementById('backBtn');
   button.disabled = true;
-  button.textContent = 'Sending, please wait';
-  document.getElementById('backBtn').disabled = true;
+  button.textContent = isEditing ? 'Saving your changes' : 'Sending, please wait';
+  backBtn.disabled = true;
 
-  callApi(
-    { action: 'register', data: collect() },
+  var payload = isEditing
+    ? { action: 'update', id: registrationId, data: collect() }
+    : { action: 'register', data: collect() };
+
+  callApi(payload,
     function (result) {
-      document.getElementById('backBtn').disabled = false;
+      backBtn.disabled = false;
       button.disabled = false;
 
-      if (result.ok) {
-        registrationId = result.id;
-        document.getElementById('savedNote').textContent =
-          'Your details are saved. Registration number ' + result.id + '. One last thing.';
-        show(PHOTO_STEP);
-      } else {
+      if (!result.ok) {
         warn(result.message);
-        button.textContent = 'Send my details';
+        button.textContent = isEditing ? 'Save my changes' : 'Send my details';
+        return;
       }
+
+      registrationId = result.id;
+
+      if (isEditing) {
+        isEditing = false;
+        finishUp('Your details have been updated. Thank you.');
+        return;
+      }
+
+      document.getElementById('savedNote').textContent =
+        'Your details are saved. Registration number ' + result.id + '. One last thing.';
+      show(PHOTO_STEP);
     },
     function () {
-      document.getElementById('backBtn').disabled = false;
+      backBtn.disabled = false;
       button.disabled = false;
-      button.textContent = 'Send my details';
-      warn('Your details did not send. Check your connection and tap Send again.');
+      button.textContent = isEditing ? 'Save my changes' : 'Send my details';
+      warn('That did not send. Check your connection and tap the button again.');
     }
   );
 }
@@ -1096,8 +1231,10 @@ function sendDetails() {
 
 function sendPhoto() {
   if (!photoData) {
-    finishUp('Your details are saved. Please see the media team after service '
-           + 'so they can take your photograph.');
+    finishUp(hasPhotoOnFile
+      ? 'Your photograph has been kept as it was.'
+      : 'Your details are saved. Please see the media team after service '
+        + 'so they can take your photograph.');
     return;
   }
 
@@ -1105,11 +1242,11 @@ function sendPhoto() {
   button.disabled = true;
   button.textContent = 'Sending your photo';
 
-  callApi(
-    { action: 'photo', id: registrationId, photo: photoData },
+  callApi({ action: 'photo', id: registrationId, photo: photoData },
     function (result) {
       button.disabled = false;
       if (result.ok) {
+        hasPhotoOnFile = true;
         finishUp('Thank you. Your details and photograph are both saved.');
       } else {
         button.textContent = 'Send my photo';
@@ -1143,6 +1280,43 @@ function finishUp(message) {
 
 /* ---------- after submitting ---------- */
 
+/** Reopen the form with everything intact, then save over the same record. */
+function startEditing() {
+  isEditing = true;
+  returnToReview = false;
+  clearWarning();
+
+  document.querySelector('footer').style.display = '';
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('backBtn').disabled = false;
+
+  steps[current].classList.remove('active');
+  show(1);
+  steps[1].classList.add('active');
+}
+
+/** Jump straight back to the camera to replace the photograph on file. */
+function retakePhoto() {
+  photoData = '';
+  var target = document.getElementById('target');
+  target.className = 'target';
+  target.innerHTML = CAMERA_ICON;
+
+  document.getElementById('savedNote').textContent =
+    'Your details are saved. Take a new photograph to replace the one on file.';
+  document.querySelector('.camera .hint').textContent =
+    'Face the light. Plain wall behind you. Head and shoulders only.';
+
+  clearWarning();
+  document.querySelector('footer').style.display = '';
+  document.getElementById('nextBtn').disabled = false;
+
+  steps[current].classList.remove('active');
+  show(PHOTO_STEP);
+  steps[PHOTO_STEP].classList.add('active');
+}
+
+/** Wipe everything and start again, so the phone can be passed on. */
 function resetForm() {
   var fields = document.querySelectorAll('main input, main select, main textarea');
   for (var i = 0; i < fields.length; i++) {
@@ -1163,12 +1337,18 @@ function resetForm() {
   registrationId = '';
   locationValue = '';
   mapLink = '';
+  isEditing = false;
+  hasPhotoOnFile = false;
+
+  toggleFollowups();
 
   var target = document.getElementById('target');
   target.className = 'target';
   target.innerHTML = CAMERA_ICON;
   document.querySelector('.camera .hint').textContent =
     'Face the light. Plain wall behind you. Head and shoulders only.';
+  document.getElementById('savedNote').textContent =
+    'Your details are saved. One last thing.';
 
   var locState = document.getElementById('locState');
   locState.className = 'locstate';
@@ -1201,7 +1381,9 @@ function finish() {
 
 /* ---------- start ---------- */
 buildRegions();
+buildDepartments();
 buildAllDates();
+toggleFollowups();
 show(0);
 </script>
 </body>
