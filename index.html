@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Assemblies of God Ghana, Tema Christian Centre - Membership Registration</title>
+<title>Assemblies of God Ghana, TCC Community 12 -Membership Registration</title>
 <style>
   :root {
     --pine:    #0F3D3E;
@@ -33,6 +33,12 @@
   .progress span { display: block; height: 100%; width: 0; background: var(--brass); transition: width .3s ease; }
 
   header { padding: 18px 22px 14px; border-bottom: 1px solid var(--line); flex: none; }
+  .logo { display: block; height: 46px; width: auto; margin: 0 0 10px; }
+  .addmore {
+    width: 100%; padding: 12px; font-size: 15px; font-family: inherit; font-weight: 600;
+    color: var(--pine); background: var(--paper);
+    border: 1.5px dashed var(--pine); border-radius: 10px; cursor: pointer;
+  }
   .church {
     font-family: Georgia, "Times New Roman", serif; font-size: 15px;
     letter-spacing: .06em; text-transform: uppercase; color: var(--pine); margin: 0;
@@ -200,6 +206,8 @@
   <div class="progress"><span id="bar"></span></div>
 
   <header>
+    <img src="logo.png" alt="Assemblies of God Ghana" class="logo"
+         onerror="this.style.display='none'">
     <p class="church">T.C.C Assemblies of God</p>
     <p class="counter" id="counter">Membership registration</p>
   </header>
@@ -287,8 +295,11 @@
         <input type="text" id="f_country" value="Ghana">
       </div>
       <div class="field">
-        <label for="f_languages">Languages spoken <span class="opt">(optional)</span></label>
-        <input type="text" id="f_languages" placeholder="For example: Twi, Ga, English">
+        <label>Languages spoken <span class="opt">(optional)</span></label>
+        <div id="languageBoxes"></div>
+        <button type="button" class="addmore" id="addLanguageBtn" onclick="addLanguage()">
+          Add another language
+        </button>
       </div>
     </section>
 
@@ -459,13 +470,31 @@
         <label for="f_spousePostal">Spouse's postal address</label>
         <input type="text" id="f_spousePostal">
       </div>
+
+      <div class="field">
+        <label>Spouse's residential address</label>
+        <div class="choices">
+          <label class="choice">
+            <input type="checkbox" id="f_spouseSameAddress" onchange="toggleSpouseAddress()">
+            <span class="ctitle">Same address as mine</span>
+          </label>
+        </div>
+        <div id="spouseAddressBox" style="margin-top: 12px;">
+          <input type="text" id="f_spouseResidential" placeholder="Address or house number">
+        </div>
+      </div>
+
       <div class="field">
         <label for="f_spouseReligion">Spouse's religion</label>
         <input type="text" id="f_spouseReligion" value="Christian">
       </div>
       <div class="field">
         <label for="f_spouseChurch">Spouse's church affiliation</label>
-        <input type="text" id="f_spouseChurch" value="Assemblies of God">
+        <select id="f_spouseChurch" onchange="toggleFollowups()"></select>
+        <div class="followup" id="spouseChurchOtherBox">
+          <label for="f_spouseChurchOther">Name of the church</label>
+          <input type="text" id="f_spouseChurchOther">
+        </div>
       </div>
       <div class="field">
         <label for="f_spouseEdu">Spouse's educational level</label>
@@ -506,7 +535,8 @@
     <!-- 9 FAITH -->
     <section class="step">
       <h2>Your walk with God</h2>
-       <!-- <p class="lead">These help the pastoral team know how best to walk with you.</p> -->
+      <p class="lead">These help the pastoral team know how best to walk with you.</p>
+
       <div class="field">
         <p class="qtext">Have you been baptised by immersion?</p>
         <div class="choices">
@@ -582,7 +612,7 @@
       </label>
 
       <p class="hint">Face the light. Plain wall behind you. Head and shoulders only.</p>
-      <p class="hint"><label for="galleryInput" class="linky">Or choose a photo already on this phone</label></p>
+      <p class="hint"><label for="galleryInput" class="linky">Or choose a photo already on this device</label></p>
 
       <input type="file" id="photoInput" accept="image/*" capture="user" class="offscreen">
       <input type="file" id="galleryInput" accept="image/*" class="offscreen">
@@ -621,7 +651,7 @@
    PASTE YOUR WEB APP URL HERE.
    Apps Script > Deploy > Manage deployments > Copy. It ends in /exec.
    ------------------------------------------------------------------ */
-var API = 'https://script.google.com/macros/s/AKfycby3n41R0pEc_QesRSZxZntIzzUyHRPvGEldvbefeCTCCaOSWlrhZsevwtlJhD_2atgC/exec';
+var API = 'PASTE_YOUR_EXEC_URL_HERE';
 
 /**
  * Sends a request to the Apps Script backend.
@@ -676,8 +706,20 @@ var MONTHS = ['January','February','March','April','May','June',
 
 var DEPARTMENTS = ["Men's Ministry", "Women's Ministry", 'Youth Ministry',
   'Joy Fellowship', 'Ys Fellowship', 'Royal Rangers', 'Missionette', 'Pathfinders',
-  'Kingdom Praise', 'Sound and Technical', 'Media', 'Ushering and Protocol',
-  'Organising Team'];
+  'Sunday School', 'Kingdom Praise', 'Sound and Technical', 'Media',
+  'Ushering and Protocol', 'Organising Team'];
+
+var CHURCHES = ['Assemblies of God', 'Anglican Church', 'Baptist Church',
+  'Catholic Church', 'Christ Apostolic Church', 'Church of Christ',
+  'Evangelical Presbyterian Church', 'Methodist Church', 'Presbyterian Church of Ghana',
+  'Seventh-day Adventist Church', 'The Apostolic Church Ghana',
+  'The Church of Pentecost', 'International Central Gospel Church',
+  'Lighthouse Chapel International', 'Perez Chapel International',
+  'Royalhouse Chapel International', 'Other charismatic or Pentecostal church',
+  'Not a churchgoer', 'Other'];
+
+var MAX_LANGUAGES = 5;
+var languageCount = 0;
 
 var EDUCATION = ['Non-Literate', 'Informal Skill Training (Apprenticeship)',
   'Basic (Primary, Middle, J.H.S)', 'Secondary, Technical or Vocational',
@@ -728,6 +770,54 @@ function buildEducation() {
           + '<span class="ctitle">' + EDUCATION[i] + '</span></label>';
   }
   document.getElementById('educationList').innerHTML = html;
+}
+
+function buildChurches() {
+  var html = '<option value="">Choose one</option>';
+  for (var i = 0; i < CHURCHES.length; i++) html += '<option>' + CHURCHES[i] + '</option>';
+  document.getElementById('f_spouseChurch').innerHTML = html;
+}
+
+/** One language box to begin with, up to five if the person wants more. */
+function addLanguage() {
+  if (languageCount >= MAX_LANGUAGES) return;
+  languageCount++;
+
+  var wrapper = document.createElement('div');
+  wrapper.style.marginBottom = '9px';
+  wrapper.innerHTML = '<input type="text" id="f_lang' + languageCount + '" '
+    + 'placeholder="' + (languageCount === 1 ? 'For example: Twi' : 'Another language') + '">';
+  document.getElementById('languageBoxes').appendChild(wrapper);
+
+  if (languageCount >= MAX_LANGUAGES) {
+    document.getElementById('addLanguageBtn').style.display = 'none';
+  }
+}
+
+function languageList() {
+  var spoken = [];
+  for (var i = 1; i <= MAX_LANGUAGES; i++) {
+    var one = val('f_lang' + i);
+    if (one) spoken.push(one);
+  }
+  return spoken;
+}
+
+/** When the spouse lives at the same address, hide the box and copy it across. */
+function toggleSpouseAddress() {
+  var same = document.getElementById('f_spouseSameAddress').checked;
+  document.getElementById('spouseAddressBox').style.display = same ? 'none' : '';
+}
+
+function spouseAddress() {
+  if (document.getElementById('f_spouseSameAddress').checked) return val('f_residential');
+  return val('f_spouseResidential');
+}
+
+function spouseChurch() {
+  var chosen = val('f_spouseChurch');
+  if (chosen !== 'Other') return chosen;
+  return val('f_spouseChurchOther') || 'Other';
 }
 
 function checkedList(name) {
@@ -797,6 +887,8 @@ function toggleFollowups() {
           .classList.toggle('show', radio('tithe') === 'No');
   document.getElementById('maritalOtherBox')
           .classList.toggle('show', radio('marital') === 'Other');
+  document.getElementById('spouseChurchOtherBox')
+          .classList.toggle('show', val('f_spouseChurch') === 'Other');
 }
 
 /** Marital radios are built into the page, so wire them up once at start. */
@@ -1089,7 +1181,7 @@ function reviewGroups() {
       ['Hometown',         3, 'f_hometown',  '#f_hometown'],
       ['Region',           3, 'f_region',    '#f_region'],
       ['Country',          3, 'f_country',   '#f_country'],
-      ['Languages spoken', 3, 'f_languages', '#f_languages']
+      ['Languages spoken', 3, function () { return languageList().join(', '); }, '#f_lang1']
     ]],
     ['How we reach you', [
       ['Phone number',        4, 'f_phone',       '#f_phone'],
@@ -1121,9 +1213,10 @@ function reviewGroups() {
       ['Hometown',           7, 'f_spouseHometown',   '#f_spouseHometown'],
       ['Region',             7, 'f_spouseRegion',     '#f_spouseRegion'],
       ['Country',            7, 'f_spouseCountry',    '#f_spouseCountry'],
-      ['Postal address',     7, 'f_spousePostal',     '#f_spousePostal'],
-      ['Religion',           7, 'f_spouseReligion',   '#f_spouseReligion'],
-      ['Church affiliation', 7, 'f_spouseChurch',     '#f_spouseChurch'],
+      ['Postal address',      7, 'f_spousePostal',     '#f_spousePostal'],
+      ['Residential address', 7, function () { return spouseAddress(); }, '#f_spouseSameAddress'],
+      ['Religion',            7, 'f_spouseReligion',   '#f_spouseReligion'],
+      ['Church affiliation',  7, function () { return spouseChurch(); }, '#f_spouseChurch'],
       ['Educational level',  7, 'f_spouseEdu',        '#f_spouseEdu']
     ]]);
   }
@@ -1236,7 +1329,6 @@ function collect() {
     'HOMETOWN': val('f_hometown'),
     'HOMETOWN REGION': val('f_region'),
     'COUNTRY': val('f_country'),
-    'LANGUAGES SPOKEN': val('f_languages'),
     'CURRENT POSTAL ADDRESS': val('f_postal'),
     'CURRENT RESIDENTIAL ADDRESS': val('f_residential'),
     'DIGITAL ADDRESS': val('f_digital'),
@@ -1261,6 +1353,11 @@ function collect() {
     'DEPARTMENTS / MINISTRIES': departmentList()
   };
 
+  var spoken = languageList();
+  for (var L = 1; L <= MAX_LANGUAGES; L++) {
+    data['LANGUAGE ' + L] = spoken[L - 1] || '';
+  }
+
   var spouse = hasSpouse();
   data['IF MARRIED, TYPE OF MARRIAGE']    = spouse ? radio('marriageType') : '';
   data['NAME OF SPOUSE / PARTNER']        = spouse ? val('f_spouseName') : '';
@@ -1271,8 +1368,9 @@ function collect() {
   data["SPOUSE'S HOMETOWN REGION"]        = spouse ? val('f_spouseRegion') : '';
   data["SPOUSE'S HOMETOWN COUNTRY"]       = spouse ? val('f_spouseCountry') : '';
   data["SPOUSE'S CURRENT POSTAL ADDRESS"] = spouse ? val('f_spousePostal') : '';
+  data["SPOUSE'S RESIDENTIAL ADDRESS"]    = spouse ? spouseAddress() : '';
   data["SPOUSE'S RELIGION"]               = spouse ? val('f_spouseReligion') : '';
-  data["SPOUSE'S CHURCH AFFILIATION"]     = spouse ? val('f_spouseChurch') : '';
+  data["SPOUSE'S CHURCH AFFILIATION"]     = spouse ? spouseChurch() : '';
   data["SPOUSE'S EDUCATIONAL LEVEL"]      = spouse ? val('f_spouseEdu') : '';
 
   for (var i = 1; i <= 7; i++) {
@@ -1429,10 +1527,17 @@ function resetForm() {
   document.getElementById('f_country').value = 'Ghana';
   document.getElementById('f_spouseCountry').value = 'Ghana';
   document.getElementById('f_spouseReligion').value = 'Christian';
-  document.getElementById('f_spouseChurch').value = 'Assemblies of God';
   document.getElementById('f_childCount').value = '0';
   document.getElementById('f_dependantCount').value = '0';
   document.getElementById('childBoxes').innerHTML = '';
+
+  document.getElementById('languageBoxes').innerHTML = '';
+  document.getElementById('addLanguageBtn').style.display = '';
+  languageCount = 0;
+  addLanguage();
+
+  document.getElementById('f_spouseSameAddress').checked = false;
+  toggleSpouseAddress();
 
   photoData = '';
   registrationId = '';
@@ -1484,9 +1589,12 @@ function finish() {
 buildRegions();
 buildDepartments();
 buildEducation();
+buildChurches();
 buildAllDates();
+addLanguage();
 watchMarital();
 toggleFollowups();
+toggleSpouseAddress();
 show(0);
 </script>
 </body>
