@@ -991,36 +991,95 @@ function captureLocation() {
 
 /* ---------- photo ---------- */
 
+var MAX_PHOTO_SIZE = 800;
+
+/**
+ * Turns whatever the camera produced into a small JPEG.
+ *
+ * A modern phone camera makes images so large that decoding one at full size
+ * can use hundreds of megabytes, which crashes older handsets with "low
+ * memory". createImageBitmap can decode straight to the size we want, so we
+ * use it when the browser has it and keep the old method as a fallback.
+ */
 function handlePhoto(event) {
   var file = event.target.files[0];
   if (!file) return;
 
+  var target = document.getElementById('target');
+  target.classList.remove('filled');
+  target.innerHTML = '<b>Working on your photo</b>';
+
+  if (window.createImageBitmap) {
+    createImageBitmap(file, { resizeWidth: MAX_PHOTO_SIZE, resizeQuality: 'high' })
+      .then(function (bitmap) {
+        drawPhoto(bitmap, bitmap.width, bitmap.height);
+        if (bitmap.close) bitmap.close();
+      })
+      .catch(function () {
+        decodeTheOldWay(file);
+      });
+    return;
+  }
+
+  decodeTheOldWay(file);
+}
+
+
+function decodeTheOldWay(file) {
   var image = new Image();
+  var source = URL.createObjectURL(file);
 
   image.onerror = function () {
-    warn('That image could not be read. Please take the photo again.');
+    URL.revokeObjectURL(source);
+    photoFailed();
   };
 
   image.onload = function () {
-    var max = 800;
-    var scale = Math.min(1, max / Math.max(image.width, image.height));
-    var canvas = document.createElement('canvas');
-    canvas.width  = Math.round(image.width  * scale);
-    canvas.height = Math.round(image.height * scale);
-    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-
-    photoData = canvas.toDataURL('image/jpeg', 0.82);
-
-    var target = document.getElementById('target');
-    target.innerHTML = '<img src="' + photoData + '" alt="Your photograph">';
-    target.classList.add('filled');
-    document.querySelector('.camera .hint').textContent = 'Tap the photo to take it again.';
-    document.getElementById('nextBtn').textContent = 'Send my photo';
-    URL.revokeObjectURL(image.src);
-    clearWarning();
+    var scale = Math.min(1, MAX_PHOTO_SIZE / Math.max(image.width, image.height));
+    try {
+      drawPhoto(image, Math.round(image.width * scale), Math.round(image.height * scale));
+    } catch (error) {
+      photoFailed();
+    }
+    URL.revokeObjectURL(source);
   };
 
-  image.src = URL.createObjectURL(file);
+  image.src = source;
+}
+
+
+function drawPhoto(source, width, height) {
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d').drawImage(source, 0, 0, width, height);
+
+    photoData = canvas.toDataURL('image/jpeg', 0.82);
+    canvas.width = 1;
+    canvas.height = 1;
+  } catch (error) {
+    photoFailed();
+    return;
+  }
+
+  var target = document.getElementById('target');
+  target.innerHTML = '<img src="' + photoData + '" alt="Your photograph">';
+  target.classList.add('filled');
+  document.querySelector('.camera .hint').textContent = 'Tap the photo to take it again.';
+  document.getElementById('nextBtn').textContent = 'Send my photo';
+  clearWarning();
+}
+
+
+function photoFailed() {
+  photoData = '';
+  var target = document.getElementById('target');
+  target.className = 'target';
+  target.innerHTML = CAMERA_ICON;
+  warn('Your phone ran short of memory while handling that photo. Close a few other '
+     + 'apps and try again, or ask the media team to take it for you after service. '
+     + 'Your details are already saved either way.');
 }
 
 document.getElementById('photoInput').addEventListener('change', handlePhoto);
