@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Assemblies of God Ghana, TCC Community 12 -Membership Registration</title>
+<title>Assemblies of God Ghana, TCC Community 12 - Membership Registration</title>
 <style>
   :root {
     --pine:    #0F3D3E;
@@ -197,6 +197,33 @@
   }
   .doneActions { display: flex; flex-direction: column; gap: 11px; margin-top: 30px; }
   .doneActions button { width: 100%; flex: none; }
+
+  /* ---- waiting overlay ---- */
+  .waiting {
+    position: fixed; inset: 0; z-index: 50;
+    background: rgba(22, 33, 31, .55);
+    display: none; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .waiting.show { display: flex; }
+  .waitcard {
+    background: var(--paper); border-radius: 14px;
+    padding: 30px 26px; text-align: center; max-width: 320px; width: 100%;
+  }
+  .spinner {
+    width: 42px; height: 42px; margin: 0 auto 18px;
+    border: 4px solid var(--line); border-top-color: var(--pine);
+    border-radius: 50%; animation: spin 900ms linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .spinner { animation-duration: 2.5s; }
+  }
+  .waitcard h3 {
+    margin: 0 0 6px; font-family: Georgia, serif; font-weight: 400;
+    font-size: 20px; color: var(--pine);
+  }
+  .waitcard p { margin: 0; font-size: 14.5px; color: var(--muted); line-height: 1.5; }
 </style>
 </head>
 
@@ -644,6 +671,14 @@
     <button class="primary" id="nextBtn" onclick="go(1)">Start</button>
   </footer>
 
+</div>
+
+<div class="waiting" id="waiting" role="status" aria-live="polite">
+  <div class="waitcard">
+    <div class="spinner"></div>
+    <h3 id="waitTitle">Sending your details</h3>
+    <p id="waitText">This takes a few seconds. Please do not close this page.</p>
+  </div>
 </div>
 
 <script>
@@ -1440,6 +1475,32 @@ function collect() {
   return data;
 }
 
+/* ---------- waiting overlay ---------- */
+
+var waitTimer = null;
+
+/**
+ * The server can take several seconds to wake up, and photos travel slowly on
+ * mobile data. Without this the page just looks frozen and people tap twice.
+ */
+function showWaiting(title, message) {
+  document.getElementById('waitTitle').textContent = title;
+  document.getElementById('waitText').textContent = message;
+  document.getElementById('waiting').classList.add('show');
+
+  window.clearTimeout(waitTimer);
+  waitTimer = window.setTimeout(function () {
+    document.getElementById('waitText').textContent =
+      'Still working. A slow connection can make this take a little longer. '
+      + 'Please keep the page open.';
+  }, 7000);
+}
+
+function hideWaiting() {
+  window.clearTimeout(waitTimer);
+  document.getElementById('waiting').classList.remove('show');
+}
+
 /* ---------- stage one: send or update the details ---------- */
 
 function sendDetails() {
@@ -1449,12 +1510,18 @@ function sendDetails() {
   button.textContent = isEditing ? 'Saving your changes' : 'Sending, please wait';
   backBtn.disabled = true;
 
+  showWaiting(
+    isEditing ? 'Saving your changes' : 'Sending your details',
+    'This takes a few seconds. Please do not close this page.'
+  );
+
   var payload = isEditing
     ? { action: 'update', id: registrationId, data: collect() }
     : { action: 'register', data: collect() };
 
   callApi(payload,
     function (result) {
+      hideWaiting();
       backBtn.disabled = false;
       button.disabled = false;
 
@@ -1477,6 +1544,7 @@ function sendDetails() {
       show(PHOTO_STEP);
     },
     function () {
+      hideWaiting();
       backBtn.disabled = false;
       button.disabled = false;
       button.textContent = isEditing ? 'Save my changes' : 'Send my details';
@@ -1500,8 +1568,12 @@ function sendPhoto() {
   button.disabled = true;
   button.textContent = 'Sending your photo';
 
+  showWaiting('Sending your photograph',
+              'Photographs take a little longer than text. Please keep the page open.');
+
   callApi({ action: 'photo', id: registrationId, photo: photoData },
     function (result) {
+      hideWaiting();
       button.disabled = false;
       if (result.ok) {
         hasPhotoOnFile = true;
@@ -1512,6 +1584,7 @@ function sendPhoto() {
       }
     },
     function () {
+      hideWaiting();
       button.disabled = false;
       button.textContent = 'Send my photo';
       warn('The photo did not send. Your details are safe. Tap to try again, '
