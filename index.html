@@ -333,14 +333,40 @@
     <!-- 4 CONTACT -->
     <section class="step">
       <h2>How we reach you</h2>
-      <p class="lead">Your phone number is how the church identifies your record, so please check it.</p>
+      <p class="lead">A phone number matters most, so please check it carefully.</p>
 
       <div class="field">
-        <label for="f_phone">Phone number</label>
+        <p class="qtext">Do you live outside Ghana?</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="abroad" value="No" onchange="toggleAbroad()"><span class="ctitle">No, I live in Ghana</span></label>
+          <label class="choice"><input type="radio" name="abroad" value="Yes" onchange="toggleAbroad()"><span class="ctitle">Yes, I live abroad</span></label>
+        </div>
+        <div class="followup" id="abroadBox">
+          <div class="field">
+            <label for="f_country2">Which country do you live in?</label>
+            <input type="text" id="f_country2" placeholder="For example: United Kingdom">
+          </div>
+          <div class="field">
+            <label for="f_city2">City or town <span class="opt">(optional)</span></label>
+            <input type="text" id="f_city2" placeholder="For example: London">
+          </div>
+          <div class="field">
+            <label for="f_phoneIntl">Your phone number there</label>
+            <input type="tel" id="f_phoneIntl" placeholder="+44 7700 900123">
+            <p class="datehint">Include the country code. This is usually your WhatsApp
+              number too, so please give the one that reaches you.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="f_phone">Ghana phone number<span class="opt" id="phoneOptional"></span></label>
         <input type="tel" id="f_phone" placeholder="024 794 6567" autocomplete="tel" maxlength="12">
+        <p class="datehint" id="phoneNote">This is how the church identifies your record,
+          so please check it.</p>
       </div>
       <div class="field">
-        <label for="f_phone2">Second phone number <span class="opt">(optional)</span></label>
+        <label for="f_phone2">Second Ghana number <span class="opt">(optional)</span></label>
         <input type="tel" id="f_phone2" placeholder="055 123 4567" maxlength="12">
         <p class="datehint">Many people carry two lines. Add the other one here if you have it.</p>
       </div>
@@ -466,6 +492,17 @@
       </div>
 
       <div class="field">
+        <label>When were you married?</label>
+        <div class="dateparts monthyear" data-date="f_wedding" data-from="1940"></div>
+        <p class="datehint">Month and year is enough. If you cannot recall, use the box below.</p>
+      </div>
+      <div class="field">
+        <label for="f_yearsMarried">Or roughly how many years have you been married?
+          <span class="opt">(optional)</span></label>
+        <input type="number" id="f_yearsMarried" min="0" max="80" placeholder="For example: 24">
+      </div>
+
+      <div class="field">
         <label for="f_spouseName">Name of spouse or partner</label>
         <input type="text" id="f_spouseName">
       </div>
@@ -562,7 +599,7 @@
     <!-- 9 FAITH -->
     <section class="step">
       <h2>Your walk with God</h2>
-      <p class="lead">These help the pastoral team know how best to walk with you.</p>
+      <p class="lead">These help the pastoral team know how best to talk with you.</p>
 
       <div class="field">
         <p class="qtext">Have you been baptised by immersion?</p>
@@ -575,15 +612,31 @@
           <label for="f_baptismChurch">In which church were you baptised?</label>
           <input type="text" id="f_baptismChurch" placeholder="Name of the church">
         </div>
+        <div class="followup" id="wantBaptismBox">
+          <p class="qtext">Would you like to be baptised?</p>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="wantBaptism" value="Yes"><span class="ctitle">Yes, please</span></label>
+            <label class="choice"><input type="radio" name="wantBaptism" value="No"><span class="ctitle">Not at the moment</span></label>
+            <label class="choice"><input type="radio" name="wantBaptism" value="Would like to know more"><span class="ctitle">I would like to know more first</span></label>
+          </div>
+        </div>
       </div>
 
       <div class="field">
         <p class="qtext">Have you received the baptism of the Holy Ghost, with the initial
           evidence of speaking in tongues?</p>
         <div class="choices">
-          <label class="choice"><input type="radio" name="holyGhost" value="Yes"><span class="ctitle">Yes</span></label>
-          <label class="choice"><input type="radio" name="holyGhost" value="No"><span class="ctitle">No</span></label>
-          <label class="choice"><input type="radio" name="holyGhost" value="Not sure"><span class="ctitle">I am not sure</span></label>
+          <label class="choice"><input type="radio" name="holyGhost" value="Yes" onchange="toggleFollowups()"><span class="ctitle">Yes</span></label>
+          <label class="choice"><input type="radio" name="holyGhost" value="No" onchange="toggleFollowups()"><span class="ctitle">No</span></label>
+          <label class="choice"><input type="radio" name="holyGhost" value="Not sure" onchange="toggleFollowups()"><span class="ctitle">I am not sure</span></label>
+        </div>
+        <div class="followup" id="wantHolyGhostBox">
+          <p class="qtext">Would you like to receive it?</p>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="wantHolyGhost" value="Yes"><span class="ctitle">Yes, please</span></label>
+            <label class="choice"><input type="radio" name="wantHolyGhost" value="No"><span class="ctitle">Not at the moment</span></label>
+            <label class="choice"><input type="radio" name="wantHolyGhost" value="Would like to know more"><span class="ctitle">I would like to know more first</span></label>
+          </div>
         </div>
       </div>
 
@@ -654,7 +707,7 @@
           </svg>
         </div>
         <h2 id="doneTitle">You are registered</h2>
-        <p class="lead" id="doneLine">Thank you. Your details are with the media team.</p>
+        <p class="lead" id="doneLine">Thank you. Your details are with the Church Administration.</p>
         <p class="refno" id="refNo"></p>
         <div class="doneActions" id="doneActions">
           <button class="ghost" onclick="startEditing()">Edit my details</button>
@@ -876,16 +929,24 @@ function maritalValue() {
 function buildDate(holder) {
   var id = holder.getAttribute('data-date');
   var from = parseInt(holder.getAttribute('data-from'), 10);
+  var monthYearOnly = holder.classList.contains('monthyear');
   var thisYear = new Date().getFullYear();
-
-  var days = '<option value="">Day</option>';
-  for (var d = 1; d <= 31; d++) days += '<option value="' + d + '">' + d + '</option>';
 
   var months = '<option value="">Month</option>';
   for (var m = 0; m < 12; m++) months += '<option value="' + (m + 1) + '">' + MONTHS[m] + '</option>';
 
   var years = '<option value="">Year</option>';
   for (var y = thisYear; y >= from; y--) years += '<option value="' + y + '">' + y + '</option>';
+
+  if (monthYearOnly) {
+    holder.innerHTML =
+        '<select id="' + id + '_m" aria-label="Month">' + months + '</select>'
+      + '<select id="' + id + '_y" aria-label="Year">'  + years  + '</select>';
+    return;
+  }
+
+  var days = '<option value="">Day</option>';
+  for (var d = 1; d <= 31; d++) days += '<option value="' + d + '">' + d + '</option>';
 
   holder.innerHTML =
       '<select id="' + id + '_d" aria-label="Day">'   + days   + '</select>'
@@ -901,29 +962,70 @@ function buildAllDates() {
 }
 
 function dateValue(id) {
-  var d = val(id + '_d'), m = val(id + '_m'), y = val(id + '_y');
-  if (!d || !m || !y) return '';
+  var m = val(id + '_m'), y = val(id + '_y');
+  if (!m || !y) return '';
+
+  // Month-and-year fields have no day box. Storing the first of the month
+  // keeps the value a real date the spreadsheet can work with.
+  var dayBox = document.getElementById(id + '_d');
+  if (!dayBox) return y + '-' + pad(m) + '-01';
+
+  var d = dayBox.value.trim();
+  if (!d) return '';
   return y + '-' + pad(m) + '-' + pad(d);
 }
 function pad(n) { return (String(n).length < 2 ? '0' : '') + n; }
 
 function dateReadable(id) {
-  var d = val(id + '_d'), m = val(id + '_m'), y = val(id + '_y');
-  if (!d || !m || !y) return '';
-  return d + ' ' + MONTHS[parseInt(m, 10) - 1] + ' ' + y;
+  var m = val(id + '_m'), y = val(id + '_y');
+  if (!m || !y) return '';
+
+  var monthName = MONTHS[parseInt(m, 10) - 1];
+  var dayBox = document.getElementById(id + '_d');
+  if (!dayBox) return monthName + ' ' + y;
+
+  var d = dayBox.value.trim();
+  if (!d) return '';
+  return d + ' ' + monthName + ' ' + y;
 }
 
 /* ---------- conditional follow-up questions ---------- */
 
 function toggleFollowups() {
+  var baptised = radio('baptised');
+  var holyGhost = radio('holyGhost');
+
   document.getElementById('baptismChurchBox')
-          .classList.toggle('show', radio('baptised') === 'Yes');
+          .classList.toggle('show', baptised === 'Yes');
+  document.getElementById('wantBaptismBox')
+          .classList.toggle('show', baptised === 'No' || baptised === 'Not sure');
+  document.getElementById('wantHolyGhostBox')
+          .classList.toggle('show', holyGhost === 'No' || holyGhost === 'Not sure');
+
   document.getElementById('titheReasonBox')
           .classList.toggle('show', radio('tithe') === 'No');
   document.getElementById('maritalOtherBox')
           .classList.toggle('show', radio('marital') === 'Other');
   document.getElementById('spouseChurchOtherBox')
           .classList.toggle('show', val('f_spouseChurch') === 'Other');
+}
+
+/** Shows the country and international phone fields for members abroad. */
+function toggleAbroad() {
+  var away = radio('abroad') === 'Yes';
+  document.getElementById('abroadBox').classList.toggle('show', away);
+  document.getElementById('phoneOptional').textContent = away ? ' (optional)' : '';
+  document.getElementById('phoneNote').textContent = away
+    ? 'Add this if you still keep a Ghana line. It is how the church sends SMS.'
+    : 'This is how the church identifies your record, so please check it.';
+}
+
+/** Loose check for a number outside Ghana, where formats vary widely. */
+function internationalPhone(value) {
+  var text = String(value || '').trim();
+  var digits = text.replace(/[^0-9]/g, '');
+  if (digits.length < 7 || digits.length > 15) return '';
+  return text;
 }
 
 /** Marital radios are built into the page, so wire them up once at start. */
@@ -1164,20 +1266,46 @@ function stepIsValid() {
     }
   }
   if (current === 4) {
-    if (!ghanaPhone(val('f_phone'))) {
-      warn('Please enter a valid phone number. Ten digits starting with 0, '
-         + 'for example 024 794 6567.');
+    if (!radio('abroad')) {
+      warn('Please say whether you live in Ghana or abroad.');
       return false;
     }
+
+    var away = radio('abroad') === 'Yes';
+    var ghana = val('f_phone');
+    var overseas = val('f_phoneIntl');
+
+    if (away && !val('f_country2')) {
+      warn('Please tell us which country you live in.');
+      return false;
+    }
+    if (ghana && !ghanaPhone(ghana)) {
+      warn('The Ghana number is not complete. Ten digits starting with 0, '
+         + 'for example 024 794 6567. Or clear the box.');
+      return false;
+    }
+    if (away && overseas && !internationalPhone(overseas)) {
+      warn('That international number does not look complete. '
+         + 'Please include the country code.');
+      return false;
+    }
+    if (!ghana && !(away && overseas)) {
+      warn(away
+        ? 'Please give at least one phone number so the church can reach you.'
+        : 'Please enter your phone number.');
+      return false;
+    }
+
     var second = val('f_phone2');
     if (second && !ghanaPhone(second)) {
       warn('The second phone number is not complete. Finish it, or clear the box.');
       return false;
     }
-    if (second && ghanaPhone(second) === ghanaPhone(val('f_phone'))) {
-      warn('Both phone numbers are the same. Change the second one, or clear it.');
+    if (second && ghana && ghanaPhone(second) === ghanaPhone(ghana)) {
+      warn('Both Ghana numbers are the same. Change the second one, or clear it.');
       return false;
     }
+
     var email = val('f_email');
     if (email && email.indexOf('@') === -1) {
       warn('That email address does not look right. Correct it, or clear it.');
@@ -1277,15 +1405,22 @@ function reviewGroups() {
       ['Country',          3, 'f_country',   '#f_country'],
       ['Languages spoken', 3, function () { return languageList().join(', '); }, '#f_lang1']
     ]],
-    ['How we reach you', [
-      ['Phone number',        4, 'f_phone',       '#f_phone'],
-      ['Second phone number', 4, 'f_phone2',      '#f_phone2'],
-      ['Email for a copy',    4, 'f_email',       '#f_email'],
-      ['Residential address', 4, 'f_residential', '#f_residential'],
-      ['Digital address',     4, 'f_digital',     '#f_digital'],
-      ['Postal address',      4, 'f_postal',      '#f_postal'],
-      ['Map location',        4, function () { return locationValue ? 'Pinned' : ''; }, '#locBtn']
-    ]],
+    ['How we reach you', (function () {
+      var rows = [['Lives outside Ghana', 4, {radio: 'abroad'}, 'input[name="abroad"]']];
+      if (radio('abroad') === 'Yes') {
+        rows.push(['Country of residence',  4, 'f_country2',  '#f_country2']);
+        rows.push(['City of residence',     4, 'f_city2',     '#f_city2']);
+        rows.push(['Phone number there',    4, 'f_phoneIntl', '#f_phoneIntl']);
+      }
+      rows.push(['Ghana phone number',   4, 'f_phone',       '#f_phone']);
+      rows.push(['Second Ghana number',  4, 'f_phone2',      '#f_phone2']);
+      rows.push(['Email for a copy',     4, 'f_email',       '#f_email']);
+      rows.push(['Residential address',  4, 'f_residential', '#f_residential']);
+      rows.push(['Digital address',      4, 'f_digital',     '#f_digital']);
+      rows.push(['Postal address',       4, 'f_postal',      '#f_postal']);
+      rows.push(['Map location',         4, function () { return locationValue ? 'Pinned' : ''; }, '#locBtn']);
+      return rows;
+    })()],
     ['Your parents', [
       ["Father's name", 5, 'f_father', '#f_father'],
       ['Father',        5, {radio: 'fatherStatus'}, 'input[name="fatherStatus"]'],
@@ -1300,6 +1435,8 @@ function reviewGroups() {
   if (hasSpouse()) {
     groups.push(['Your spouse', [
       ['Type of marriage',   7, {radio: 'marriageType'}, 'input[name="marriageType"]'],
+      ['Married since',      7, {date: 'f_wedding'}, '#f_wedding_m'],
+      ['Years married',      7, 'f_yearsMarried',    '#f_yearsMarried'],
       ['Name',               7, 'f_spouseName',       '#f_spouseName'],
       ['Date of birth',      7, {date: 'f_spouseDob'}, '#f_spouseDob_d'],
       ['Occupation',         7, 'f_spouseOccupation', '#f_spouseOccupation'],
@@ -1331,8 +1468,13 @@ function reviewGroups() {
   ];
   if (radio('baptised') === 'Yes') {
     faith.push(['Church of baptism', 9, 'f_baptismChurch', '#f_baptismChurch']);
+  } else if (radio('baptised')) {
+    faith.push(['Would like baptism', 9, {radio: 'wantBaptism'}, 'input[name="wantBaptism"]']);
   }
   faith.push(['Holy Ghost baptism',  9, {radio: 'holyGhost'}, 'input[name="holyGhost"]']);
+  if (radio('holyGhost') && radio('holyGhost') !== 'Yes') {
+    faith.push(['Would like to receive it', 9, {radio: 'wantHolyGhost'}, 'input[name="wantHolyGhost"]']);
+  }
   faith.push(['Tithe paying member', 9, {radio: 'tithe'},     'input[name="tithe"]']);
   if (radio('tithe') === 'No') {
     faith.push(['Reason given', 9, 'f_titheReason', '#f_titheReason']);
@@ -1428,8 +1570,12 @@ function collect() {
     'DIGITAL ADDRESS': val('f_digital'),
     'GPS COORDINATES': locationValue,
     'MAP LINK': mapLink,
+    'LIVING OUTSIDE GHANA': radio('abroad'),
+    'COUNTRY OF RESIDENCE': radio('abroad') === 'Yes' ? val('f_country2') : '',
+    'CITY OF RESIDENCE': radio('abroad') === 'Yes' ? val('f_city2') : '',
     'PHONE NUMBER': val('f_phone'),
     'SECOND PHONE NUMBER': val('f_phone2'),
+    'INTERNATIONAL PHONE NUMBER': radio('abroad') === 'Yes' ? val('f_phoneIntl') : '',
     'EMAIL ADDRESS': val('f_email'),
     "FATHER'S NAME": val('f_father'),
     'FATHER ALIVE OR DECEASED': radio('fatherStatus'),
@@ -1441,10 +1587,13 @@ function collect() {
     'NAME(S) OF DEPENDANT(S)': val('f_dependantNames'),
     'BAPTISED BY IMMERSION': radio('baptised'),
     'CHURCH OF BAPTISM': radio('baptised') === 'Yes' ? val('f_baptismChurch') : '',
+    'WOULD LIKE WATER BAPTISM': radio('baptised') === 'Yes' ? '' : radio('wantBaptism'),
     'HOLY GHOST BAPTISM WITH TONGUES': radio('holyGhost'),
+    'WOULD LIKE HOLY GHOST BAPTISM': radio('holyGhost') === 'Yes' ? '' : radio('wantHolyGhost'),
     'TITHE PAYING MEMBER': radio('tithe'),
     'REASON FOR NOT TITHING': radio('tithe') === 'No' ? val('f_titheReason') : '',
-    'DEPARTMENTS / MINISTRIES': departmentList()
+    'DEPARTMENTS / MINISTRIES': departmentList(),
+    'YEARS MARRIED (CALCULATED)': ''
   };
 
   var spoken = languageList();
@@ -1454,6 +1603,8 @@ function collect() {
 
   var spouse = hasSpouse();
   data['IF MARRIED, TYPE OF MARRIAGE']    = spouse ? radio('marriageType') : '';
+  data['DATE OF MARRIAGE']                = spouse ? dateValue('f_wedding') : '';
+  data['YEARS MARRIED (STATED)']          = spouse ? val('f_yearsMarried') : '';
   data['NAME OF SPOUSE / PARTNER']        = spouse ? val('f_spouseName') : '';
   data["SPOUSE'S DATE OF BIRTH"]          = spouse ? dateValue('f_spouseDob') : '';
   data["SPOUSE'S OCCUPATION"]             = spouse ? val('f_spouseOccupation') : '';
@@ -1670,6 +1821,7 @@ function resetForm() {
 
   document.getElementById('f_spouseSameAddress').checked = false;
   toggleSpouseAddress();
+  toggleAbroad();
 
   photoData = '';
   registrationId = '';
@@ -1727,6 +1879,7 @@ addLanguage();
 watchMarital();
 toggleFollowups();
 toggleSpouseAddress();
+toggleAbroad();
 show(0);
 </script>
 </body>
