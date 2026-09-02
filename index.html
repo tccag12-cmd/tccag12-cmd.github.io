@@ -493,8 +493,9 @@
 
       <div class="field">
         <label>When were you married?</label>
-        <div class="dateparts monthyear" data-date="f_wedding" data-from="1940"></div>
-        <p class="datehint">Month and year is enough. If you cannot recall, use the box below.</p>
+        <div class="dateparts" data-date="f_wedding" data-from="1940"></div>
+        <p class="datehint">If you remember the exact day, please give it, so the church
+          can celebrate your anniversary. Month and year alone is fine otherwise.</p>
       </div>
       <div class="field">
         <label for="f_yearsMarried">Or roughly how many years have you been married?
@@ -707,7 +708,7 @@
           </svg>
         </div>
         <h2 id="doneTitle">You are registered</h2>
-        <p class="lead" id="doneLine">Thank you. Your details are with the Church Administration.</p>
+        <p class="lead" id="doneLine">Thank you. Your details are with the media team.</p>
         <p class="refno" id="refNo"></p>
         <div class="doneActions" id="doneActions">
           <button class="ghost" onclick="startEditing()">Edit my details</button>
@@ -987,6 +988,36 @@ function dateReadable(id) {
   var d = dayBox.value.trim();
   if (!d) return '';
   return d + ' ' + monthName + ' ' + y;
+}
+
+/* ---------- the wedding date, where the day is optional ---------- */
+
+/**
+ * Month and year are enough to work out how long someone has been married.
+ * The day is only needed for anniversaries, so it is optional here. When it
+ * is missing we store the first of the month, which keeps the value a real
+ * date the spreadsheet can calculate with.
+ */
+function weddingDate() {
+  var m = val('f_wedding_m'), y = val('f_wedding_y');
+  if (!m || !y) return '';
+  var d = val('f_wedding_d');
+  return y + '-' + pad(m) + '-' + (d ? pad(d) : '01');
+}
+
+/** Only filled when the exact day is known, so no false anniversaries appear. */
+function weddingAnniversary() {
+  var d = val('f_wedding_d'), m = val('f_wedding_m');
+  if (!d || !m) return '';
+  return pad(m) + '-' + pad(d);
+}
+
+function weddingReadable() {
+  var m = val('f_wedding_m'), y = val('f_wedding_y');
+  if (!m || !y) return '';
+  var d = val('f_wedding_d');
+  var monthName = MONTHS[parseInt(m, 10) - 1];
+  return (d ? d + ' ' : '') + monthName + ' ' + y;
 }
 
 /* ---------- conditional follow-up questions ---------- */
@@ -1435,7 +1466,7 @@ function reviewGroups() {
   if (hasSpouse()) {
     groups.push(['Your spouse', [
       ['Type of marriage',   7, {radio: 'marriageType'}, 'input[name="marriageType"]'],
-      ['Married since',      7, {date: 'f_wedding'}, '#f_wedding_m'],
+      ['Married since',      7, function () { return weddingReadable(); }, '#f_wedding_d'],
       ['Years married',      7, 'f_yearsMarried',    '#f_yearsMarried'],
       ['Name',               7, 'f_spouseName',       '#f_spouseName'],
       ['Date of birth',      7, {date: 'f_spouseDob'}, '#f_spouseDob_d'],
@@ -1603,7 +1634,8 @@ function collect() {
 
   var spouse = hasSpouse();
   data['IF MARRIED, TYPE OF MARRIAGE']    = spouse ? radio('marriageType') : '';
-  data['DATE OF MARRIAGE']                = spouse ? dateValue('f_wedding') : '';
+  data['DATE OF MARRIAGE']                = spouse ? weddingDate() : '';
+  data['ANNIVERSARY (MM-DD)']             = spouse ? weddingAnniversary() : '';
   data['YEARS MARRIED (STATED)']          = spouse ? val('f_yearsMarried') : '';
   data['NAME OF SPOUSE / PARTNER']        = spouse ? val('f_spouseName') : '';
   data["SPOUSE'S DATE OF BIRTH"]          = spouse ? dateValue('f_spouseDob') : '';
