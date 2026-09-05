@@ -350,12 +350,6 @@
             <label for="f_city2">City or town <span class="opt">(optional)</span></label>
             <input type="text" id="f_city2" placeholder="For example: London">
           </div>
-          <div class="field">
-            <label for="f_phoneIntl">Your phone number there</label>
-            <input type="tel" id="f_phoneIntl" placeholder="+44 7700 900123">
-            <p class="datehint">Include the country code. This is usually your WhatsApp
-              number too, so please give the one that reaches you.</p>
-          </div>
         </div>
       </div>
 
@@ -369,6 +363,14 @@
         <label for="f_phone2">Second Ghana number <span class="opt">(optional)</span></label>
         <input type="tel" id="f_phone2" placeholder="055 123 4567" maxlength="12">
         <p class="datehint">Many people carry two lines. Add the other one here if you have it.</p>
+      </div>
+      <!-- Open to everyone, not only members abroad. Many people in Ghana
+           travel for business and keep a foreign line the church can reach. -->
+      <div class="field">
+        <label for="f_phoneIntl">Phone number outside Ghana <span class="opt">(optional)</span></label>
+        <input type="tel" id="f_phoneIntl" placeholder="+44 7700 900123">
+        <p class="datehint">If you travel or live abroad, add the number that reaches you
+          there. Include the country code. This is usually your WhatsApp number too.</p>
       </div>
 
       <div class="emailbox">
@@ -1041,7 +1043,7 @@ function toggleFollowups() {
           .classList.toggle('show', val('f_spouseChurch') === 'Other');
 }
 
-/** Shows the country and international phone fields for members abroad. */
+/** Shows the country and city fields for members abroad. */
 function toggleAbroad() {
   var away = radio('abroad') === 'Yes';
   document.getElementById('abroadBox').classList.toggle('show', away);
@@ -1315,15 +1317,18 @@ function stepIsValid() {
          + 'for example 024 794 6567. Or clear the box.');
       return false;
     }
-    if (away && overseas && !internationalPhone(overseas)) {
+    if (overseas && !internationalPhone(overseas)) {
       warn('That international number does not look complete. '
          + 'Please include the country code.');
       return false;
     }
+    // A Ghana number stays required for people living here, since SMS and
+    // duplicate checks depend on it. Only members abroad may rely on the
+    // international number alone.
     if (!ghana && !(away && overseas)) {
       warn(away
         ? 'Please give at least one phone number so the church can reach you.'
-        : 'Please enter your phone number.');
+        : 'Please enter your Ghana phone number.');
       return false;
     }
 
@@ -1441,15 +1446,15 @@ function reviewGroups() {
       if (radio('abroad') === 'Yes') {
         rows.push(['Country of residence',  4, 'f_country2',  '#f_country2']);
         rows.push(['City of residence',     4, 'f_city2',     '#f_city2']);
-        rows.push(['Phone number there',    4, 'f_phoneIntl', '#f_phoneIntl']);
       }
-      rows.push(['Ghana phone number',   4, 'f_phone',       '#f_phone']);
-      rows.push(['Second Ghana number',  4, 'f_phone2',      '#f_phone2']);
-      rows.push(['Email for a copy',     4, 'f_email',       '#f_email']);
-      rows.push(['Residential address',  4, 'f_residential', '#f_residential']);
-      rows.push(['Digital address',      4, 'f_digital',     '#f_digital']);
-      rows.push(['Postal address',       4, 'f_postal',      '#f_postal']);
-      rows.push(['Map location',         4, function () { return locationValue ? 'Pinned' : ''; }, '#locBtn']);
+      rows.push(['Ghana phone number',    4, 'f_phone',       '#f_phone']);
+      rows.push(['Second Ghana number',   4, 'f_phone2',      '#f_phone2']);
+      rows.push(['Number outside Ghana',  4, 'f_phoneIntl',   '#f_phoneIntl']);
+      rows.push(['Email for a copy',      4, 'f_email',       '#f_email']);
+      rows.push(['Residential address',   4, 'f_residential', '#f_residential']);
+      rows.push(['Digital address',       4, 'f_digital',     '#f_digital']);
+      rows.push(['Postal address',        4, 'f_postal',      '#f_postal']);
+      rows.push(['Map location',          4, function () { return locationValue ? 'Pinned' : ''; }, '#locBtn']);
       return rows;
     })()],
     ['Your parents', [
@@ -1606,7 +1611,7 @@ function collect() {
     'CITY OF RESIDENCE': radio('abroad') === 'Yes' ? val('f_city2') : '',
     'PHONE NUMBER': val('f_phone'),
     'SECOND PHONE NUMBER': val('f_phone2'),
-    'INTERNATIONAL PHONE NUMBER': radio('abroad') === 'Yes' ? val('f_phoneIntl') : '',
+    'INTERNATIONAL PHONE NUMBER': val('f_phoneIntl'),
     'EMAIL ADDRESS': val('f_email'),
     "FATHER'S NAME": val('f_father'),
     'FATHER ALIVE OR DECEASED': radio('fatherStatus'),
