@@ -177,6 +177,8 @@
   .resume button:last-child { margin-bottom: 0; }
 
   /* the sample photograph and the rules that go with it */
+  /* The sample is a wide image with two examples side by side, so it is
+     shown whole rather than cropped into a circle. */
   .sample {
     display: block; width: 100%; max-width: 420px; height: auto;
     margin: 4px auto 14px; border-radius: 10px; border: 1.5px solid var(--line);
@@ -252,6 +254,8 @@
   @media (prefers-reduced-motion: reduce) {
     .spinner { animation-duration: 2.5s; }
   }
+  .waitcard .primary, .waitcard .ghost { width: 100%; flex: none; margin-top: 10px; }
+  .waitcard .ghost { margin-top: 8px; }
   .waitcard h3 {
     margin: 0 0 6px; font-family: Georgia, serif; font-weight: 400;
     font-size: 20px; color: var(--pine);
@@ -802,6 +806,17 @@
   </div>
 </div>
 
+<div class="waiting" id="readyCheck" role="dialog" aria-modal="true">
+  <div class="waitcard">
+    <h3>Is your photograph ready?</h3>
+    <p style="text-align: left;">At the end you will take a photo with your camera, or choose
+      one already on this phone. It must show your head and shoulders, facing the camera,
+      against a plain wall.</p>
+    <button type="button" class="primary" onclick="readyYes()">Yes, I am ready</button>
+    <button type="button" class="ghost" onclick="readyNo()">Not yet</button>
+  </div>
+</div>
+
 <script>
 /* ------------------------------------------------------------------
    PASTE YOUR WEB APP URL HERE.
@@ -845,6 +860,7 @@ var locationValue = '';
 var mapLink = '';
 var isEditing = false;
 var hasPhotoOnFile = false;
+var photoReady = false;
 
 var SPOUSE_STEP = 7;
 var REVIEW_STEP = 11;
@@ -1440,6 +1456,7 @@ function go(direction) {
 
   if (direction > 0) {
     if (current === REVIEW_STEP) { sendDetails(); return; }
+    if (current === 0 && !photoReady) { askIfReady(); return; }
     if (!stepIsValid()) return;
   }
 
@@ -1945,6 +1962,7 @@ function resetForm() {
   mapLink = '';
   isEditing = false;
   hasPhotoOnFile = false;
+  photoReady = false;
 
   toggleFollowups();
 
@@ -1986,6 +2004,29 @@ function finish() {
     document.getElementById('doneLine').textContent = 'You can now close this page. Thank you.';
     document.getElementById('doneActions').style.display = 'none';
   }, 250);
+}
+
+/* ---------- photo readiness check ---------- */
+
+/**
+ * Asked once, when Start is tapped. Most abandoned photos come from people
+ * who reach the camera step with nothing ready. A moment's pause here costs
+ * nothing and sends the unready ones off to find a picture first.
+ */
+function askIfReady() {
+  document.getElementById('readyCheck').classList.add('show');
+}
+
+function readyYes() {
+  photoReady = true;
+  document.getElementById('readyCheck').classList.remove('show');
+  show(1);
+}
+
+function readyNo() {
+  document.getElementById('readyCheck').classList.remove('show');
+  warn('Take or find your photograph first, then come back and tap Start. '
+     + 'The link will still be here.');
 }
 
 /* ---------- unfinished drafts ---------- */
@@ -2100,6 +2141,7 @@ function resumeDraft() {
   toggleSpouseAddress();
 
   document.getElementById('resumeBox').classList.remove('show');
+  photoReady = true;
   var target = draft.step || 1;
   show(Math.min(Math.max(target, 1), REVIEW_STEP));
 }
