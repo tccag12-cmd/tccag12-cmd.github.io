@@ -176,6 +176,29 @@
   .resume button { width: 100%; flex: none; margin-bottom: 9px; }
   .resume button:last-child { margin-bottom: 0; }
 
+  /* the sample photograph and the rules that go with it */
+  .sample {
+    display: block; width: 180px; height: 180px; object-fit: cover; border-radius: 50%;
+    margin: 4px auto 14px; border: 3px solid var(--pine);
+  }
+  .rules { margin: 0 0 22px; padding: 0; list-style: none; }
+  .rules li {
+    padding: 9px 0 9px 30px; position: relative; font-size: 16px; line-height: 1.4;
+    border-bottom: 1px solid var(--line);
+  }
+  .rules li:before {
+    content: ''; position: absolute; left: 4px; top: 15px; width: 14px; height: 8px;
+    border-left: 2.5px solid var(--pine); border-bottom: 2.5px solid var(--pine);
+    transform: rotate(-45deg);
+  }
+  .photobox {
+    background: var(--surface); border-radius: 12px; padding: 16px 17px 4px; margin-bottom: 22px;
+  }
+  .photobox h3 {
+    margin: 0 0 12px; font-size: 16.5px; color: var(--pine);
+    font-family: Georgia, serif; font-weight: 400; text-align: center;
+  }
+
   .saved {
     background: #EFF5F1; border-left: 4px solid var(--pine); color: var(--pine);
     padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 15px; margin-bottom: 20px;
@@ -264,6 +287,16 @@
         compilation of the new church database and membership renewal.</p>
       <p class="lead">This takes about five minutes. You will need your phone number, and
         your camera at the end for a photograph.</p>
+      <div class="photobox">
+        <h3>Your photograph should look like this</h3>
+        <img src="Sample%20AI%20generated%20image.jpg" alt="Example of a head and shoulders photograph"
+             class="sample" onerror="this.style.display='none'">
+        <ul class="rules">
+          <li>Head and shoulders only, facing the camera</li>
+          <li>Plain wall behind you, good light on your face</li>
+          <li>No hats, no sunglasses, no group photos</li>
+        </ul>
+      </div>
       <p class="lead">Registering for a parent or grandparent? Please do. Fill it in with
         their details, not yours.</p>
     </section>
@@ -696,7 +729,24 @@
       <div class="review" id="review"></div>
     </section>
 
-    <!-- 12 PHOTO (after the details are saved) -->
+    <!-- 12 PHOTO RULES (after the details are saved, before the camera) -->
+    <section class="step">
+      <div class="saved" id="tipsSaved">Your details are saved. One last thing.</div>
+      <h2>Before you take your photograph</h2>
+      <p class="lead">This picture goes on your church record, so please take a moment
+        to get it right.</p>
+      <img src="Sample%20AI%20generated%20image.jpg" alt="Example of a head and shoulders photograph"
+           class="sample" onerror="this.style.display='none'">
+      <ul class="rules">
+        <li>Head and shoulders only, facing the camera</li>
+        <li>Hold the phone at eye level, not from below</li>
+        <li>Plain wall behind you, with the light on your face, not behind you</li>
+        <li>No hats, no sunglasses, nobody else in the picture</li>
+        <li>If someone is registering you, let them take it for you</li>
+      </ul>
+
+    <!-- 13 PHOTO -->
+    </section>
     <section class="step camera">
       <div class="saved" id="savedNote">Your details are saved. One last thing.</div>
       <h2>Your photograph</h2>
@@ -798,8 +848,9 @@ var hasPhotoOnFile = false;
 
 var SPOUSE_STEP = 7;
 var REVIEW_STEP = 11;
-var PHOTO_STEP  = 12;
-var DONE_STEP   = 13;
+var PHOTO_TIPS_STEP = 12;
+var PHOTO_STEP  = 13;
+var DONE_STEP   = 14;
 
 var MARRIED = ['Married', 'Divorced and Remarried', 'Widowed and Remarried', 'Co-habiting'];
 
@@ -1382,6 +1433,11 @@ function go(direction) {
     return;
   }
 
+  if (current === PHOTO_TIPS_STEP) {
+    if (direction > 0) show(PHOTO_STEP);
+    return;
+  }
+
   if (direction > 0) {
     if (current === REVIEW_STEP) { sendDetails(); return; }
     if (!stepIsValid()) return;
@@ -1426,13 +1482,15 @@ function show(index) {
     current === 0 ? 'Membership registration' : 'Step ' + shown + ' of ' + total;
 
   var back = document.getElementById('backBtn');
-  back.style.visibility = (current === 0 || current === PHOTO_STEP) ? 'hidden' : 'visible';
+  back.style.visibility =
+    (current === 0 || current === PHOTO_TIPS_STEP || current === PHOTO_STEP) ? 'hidden' : 'visible';
   back.textContent = returnToReview ? 'Cancel' : 'Back';
 
   document.getElementById('nextBtn').textContent =
     returnToReview ? 'Back to check'
       : current === 0 ? 'Start'
       : current === REVIEW_STEP ? (isEditing ? 'Save my changes' : 'Send my details')
+      : current === PHOTO_TIPS_STEP ? 'I am ready, open my camera'
       : current === PHOTO_STEP ? (photoData ? 'Send my photo'
                                             : (hasPhotoOnFile ? 'Keep my current photo' : 'Skip for now'))
       : 'Next';
@@ -1747,9 +1805,10 @@ function sendDetails() {
         return;
       }
 
-      document.getElementById('savedNote').textContent =
-        'Your details are saved. Registration number ' + result.id + '. One last thing.';
-      show(PHOTO_STEP);
+      var savedLine = 'Your details are saved. Registration number ' + result.id + '. One last thing.';
+      document.getElementById('tipsSaved').textContent = savedLine;
+      document.getElementById('savedNote').textContent = savedLine;
+      show(PHOTO_TIPS_STEP);
     },
     function () {
       hideWaiting();
@@ -1895,6 +1954,8 @@ function resetForm() {
   document.querySelector('.camera .hint').textContent =
     'Face the light. Plain wall behind you. Head and shoulders only.';
   document.getElementById('savedNote').textContent =
+    'Your details are saved. One last thing.';
+  document.getElementById('tipsSaved').textContent =
     'Your details are saved. One last thing.';
 
   var locState = document.getElementById('locState');
