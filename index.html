@@ -166,6 +166,16 @@
     font-size: 15px; margin-bottom: 18px; display: none;
   }
   .alert.show { display: block; }
+  /* offered on the welcome screen when an unfinished draft is on this phone */
+  .resume {
+    display: none; background: #F0F5F3; border: 1.5px solid var(--pine);
+    border-radius: 12px; padding: 17px; margin-bottom: 22px;
+  }
+  .resume.show { display: block; }
+  .resume p { margin: 0 0 12px; font-size: 15.5px; color: var(--pine); line-height: 1.45; }
+  .resume button { width: 100%; flex: none; margin-bottom: 9px; }
+  .resume button:last-child { margin-bottom: 0; }
+
   .saved {
     background: #EFF5F1; border-left: 4px solid var(--pine); color: var(--pine);
     padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 15px; margin-bottom: 20px;
@@ -245,6 +255,11 @@
     <!-- 0 WELCOME -->
     <section class="step active">
       <h2>Welcome home</h2>
+      <div class="resume" id="resumeBox">
+        <p id="resumeText"></p>
+        <button type="button" class="primary" onclick="resumeDraft()">Continue where I stopped</button>
+        <button type="button" class="ghost" onclick="discardDraft()">Start fresh</button>
+      </div>
       <p class="lead">Kindly assist us in filling the following details towards the
         compilation of the new church database and membership renewal.</p>
       <p class="lead">This takes about five minutes. You will need your phone number, and
@@ -1393,6 +1408,10 @@ function show(index) {
 
   if (current === REVIEW_STEP) buildReview();
 
+  // Keep a draft on the phone until the details have been sent, so a closed
+  // page or a dead battery does not mean starting from the beginning.
+  if (current >= 1 && current <= REVIEW_STEP && !registrationId) saveDraft();
+
   var visible = [];
   for (var i = 1; i <= PHOTO_STEP; i++) {
     if (i === SPOUSE_STEP && !hasSpouse()) continue;
@@ -1720,6 +1739,7 @@ function sendDetails() {
       }
 
       registrationId = result.id;
+      clearDraft();
 
       if (isEditing) {
         isEditing = false;
@@ -1886,6 +1906,7 @@ function resetForm() {
 
   returnToReview = false;
   clearWarning();
+  clearDraft();
 
   document.querySelector('footer').style.display = '';
   document.getElementById('nextBtn').disabled = false;
@@ -1906,6 +1927,129 @@ function finish() {
   }, 250);
 }
 
+/* ---------- unfinished drafts ---------- */
+
+var DRAFT_KEY = 'tcc_registration_draft';
+
+/**
+ * Drafts live in the browser's own storage, so they only reappear on the
+ * same phone in the same browser. That covers the common case, someone who
+ * stops halfway and reopens the link later, without needing an account.
+ * Private browsing can refuse storage, so every call is wrapped.
+ */
+function saveDraft() {
+  var draft = {
+    saved: new Date().getTime(),
+    step: current,
+    values: {},
+    radios: {},
+    checks: [],
+    languageCount: languageCount,
+    locationValue: locationValue,
+    mapLink: mapLink
+  };
+
+  var fields = document.querySelectorAll('main input, main select, main textarea');
+  for (var i = 0; i < fields.length; i++) {
+    var field = fields[i];
+    if (field.type === 'file') continue;
+    if (field.type === 'radio') {
+      if (field.checked) draft.radios[field.name] = field.value;
+    } else if (field.type === 'checkbox') {
+      if (field.checked) draft.checks.push(field.id ? '#' + field.id : field.name + '=' + field.value);
+    } else if (field.id) {
+      draft.values[field.id] = field.value;
+    }
+  }
+
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch (error) {}
+}
+
+function readDraft() {
+  try {
+    var raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (error) {}
+  document.getElementById('resumeBox').classList.remove('show');
+}
+
+/** Offers the draft on the welcome screen, named so the right person picks it up. */
+function offerDraft() {
+  var draft = readDraft();
+  if (!draft || !draft.values) return;
+
+  var name = ((draft.values.f_first || '') + ' ' + (draft.values.f_surname || '')).trim();
+  if (!name) { clearDraft(); return; }
+
+  document.getElementById('resumeText').textContent =
+    'There is an unfinished registration on this phone for ' + name + '. '
+    + 'Would you like to continue it, or start a new one?';
+  document.getElementById('resumeBox').classList.add('show');
+}
+
+function discardDraft() {
+  clearDraft();
+}
+
+/** Puts every saved answer back, rebuilding the language and child boxes first. */
+function resumeDraft() {
+  var draft = readDraft();
+  if (!draft) return;
+
+  for (var L = languageCount; L < (draft.languageCount || 1); L++) addLanguage();
+
+  var childCount = document.getElementById('f_childCount');
+  childCount.value = draft.values.f_childCount || '0';
+  fireInput(childCount);
+
+  for (var id in draft.values) {
+    var field = document.getElementById(id);
+    if (field) field.value = draft.values[id];
+  }
+  for (var name in draft.radios) {
+    var chosen = document.querySelector(
+      'input[name="' + name + '"][value="' + draft.radios[name] + '"]');
+    if (chosen) chosen.checked = true;
+  }
+  for (var c = 0; c < draft.checks.length; c++) {
+    var key = draft.checks[c];
+    var box = key.charAt(0) === '#'
+      ? document.getElementById(key.slice(1))
+      : document.querySelector('input[name="' + key.split('=')[0] + '"][value="' + key.split('=')[1] + '"]');
+    if (box) box.checked = true;
+  }
+
+  locationValue = draft.locationValue || '';
+  mapLink = draft.mapLink || '';
+  if (locationValue) {
+    var locState = document.getElementById('locState');
+    locState.className = 'locstate good';
+    locState.textContent = 'Location saved.';
+    document.getElementById('locBtn').textContent = 'Update my location';
+  }
+
+  toggleFollowups();
+  toggleAbroad();
+  toggleSpouseAddress();
+
+  document.getElementById('resumeBox').classList.remove('show');
+  var target = draft.step || 1;
+  show(Math.min(Math.max(target, 1), REVIEW_STEP));
+}
+
+/** Old Android browsers have no Event constructor, so build the event by hand. */
+function fireInput(element) {
+  var event = document.createEvent('Event');
+  event.initEvent('input', true, true);
+  element.dispatchEvent(event);
+}
+
 /* ---------- start ---------- */
 buildRegions();
 buildDepartments();
@@ -1918,6 +2062,7 @@ toggleFollowups();
 toggleSpouseAddress();
 toggleAbroad();
 show(0);
+offerDraft();
 </script>
 </body>
 </html>
