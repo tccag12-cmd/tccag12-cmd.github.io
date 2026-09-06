@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>TCC Membership - Team Photo Page</title>
+<style>
+  :root {
+    --pine:    #0F3D3E;
+    --brass:   #C9A227;
+    --ink:     #16211F;
+    --muted:   #5C6B66;
+    --paper:   #FFFFFF;
+    --surface: #F4F6F4;
+    --line:    #DCE3DF;
+    --error:   #A63D2F;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    margin: 0; background: var(--surface); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 17px; line-height: 1.5;
+  }
+  .frame {
+    max-width: 560px; margin: 0 auto; min-height: 100vh;
+    background: var(--paper); display: flex; flex-direction: column;
+  }
+  header { padding: 18px 22px 14px; border-bottom: 1px solid var(--line); }
+  .logo { display: block; height: 46px; width: auto; margin: 0 0 10px; }
+  .church {
+    font-family: Georgia, "Times New Roman", serif; font-size: 15px;
+    letter-spacing: .06em; text-transform: uppercase; color: var(--pine); margin: 0;
+  }
+  .counter { font-size: 13px; color: var(--muted); margin: 3px 0 0; }
+
+  main { flex: 1; padding: 26px 22px 20px; }
+  .step { display: none; }
+  .step.active { display: block; }
+
+  h2 {
+    font-family: Georgia, "Times New Roman", serif; font-size: 27px; line-height: 1.25;
+    margin: 0 0 6px; color: var(--pine); font-weight: 400;
+  }
+  .lead { color: var(--muted); margin: 0 0 24px; font-size: 15.5px; }
+
+  .field { margin-bottom: 20px; }
+  label { display: block; font-size: 14px; font-weight: 600; letter-spacing: .02em; margin-bottom: 7px; }
+  input[type=text], input[type=tel], input[type=password] {
+    width: 100%; padding: 14px 15px; font-size: 17px; font-family: inherit;
+    color: var(--ink); background: var(--paper);
+    border: 1.5px solid var(--line); border-radius: 10px;
+  }
+  input:focus { outline: 3px solid rgba(201,162,39,.35); border-color: var(--pine); }
+  .datehint { font-size: 13.5px; color: var(--muted); margin: 7px 0 0; }
+
+  .alert {
+    background: #FBF0EE; border-left: 4px solid var(--error); color: var(--error);
+    padding: 12px 14px; border-radius: 0 8px 8px 0;
+    font-size: 15px; margin-bottom: 18px; display: none;
+  }
+  .alert.show { display: block; }
+
+  /* search results */
+  .result {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    width: 100%; padding: 14px 4px; border: 0; border-bottom: 1px solid var(--line);
+    background: none; font-family: inherit; text-align: left; cursor: pointer;
+  }
+  .result .who { font-size: 16.5px; font-weight: 600; color: var(--ink); }
+  .result .phone { display: block; font-size: 14px; color: var(--muted); font-weight: 400; }
+  .badge {
+    flex: none; font-size: 12.5px; font-weight: 700; letter-spacing: .04em;
+    padding: 5px 10px; border-radius: 20px; text-transform: uppercase;
+  }
+  .badge.none { background: #FBF3D6; color: #7A5E0C; }
+  .badge.has  { background: #E4EFE9; color: var(--pine); }
+  .empty { color: var(--muted); font-size: 15.5px; padding: 12px 0; }
+
+  /* photo rules and camera */
+  .sample {
+    display: block; width: 100%; max-width: 420px; height: auto;
+    margin: 4px auto 14px; border-radius: 10px; border: 1.5px solid var(--line);
+  }
+  .rules { margin: 0 0 22px; padding: 0; list-style: none; }
+  .rules li {
+    padding: 9px 0 9px 30px; position: relative; font-size: 16px; line-height: 1.4;
+    border-bottom: 1px solid var(--line);
+  }
+  .rules li:before {
+    content: ''; position: absolute; left: 4px; top: 15px; width: 14px; height: 8px;
+    border-left: 2.5px solid var(--pine); border-bottom: 2.5px solid var(--pine);
+    transform: rotate(-45deg);
+  }
+  .person {
+    background: #F0F5F3; border-left: 4px solid var(--pine); color: var(--pine);
+    padding: 12px 14px; border-radius: 0 8px 8px 0; font-size: 15.5px; margin-bottom: 20px;
+  }
+  .target {
+    width: 210px; height: 210px; margin: 6px auto 20px; border-radius: 50%;
+    border: 3px dashed var(--brass); background: var(--surface);
+    display: flex; align-items: center; justify-content: center; flex-direction: column;
+    overflow: hidden; cursor: pointer;
+  }
+  .target.filled { border-style: solid; border-color: var(--pine); }
+  .target img { width: 100%; height: 100%; object-fit: cover; }
+  .target svg { width: 52px; height: 52px; stroke: var(--pine); fill: none; stroke-width: 1.6; }
+  .target b { font-size: 15px; margin-top: 10px; color: var(--pine); }
+  .camera { text-align: center; }
+  .hint { font-size: 14.5px; color: var(--muted); margin: 0 0 4px; }
+  .linky { display: inline; font-size: 14.5px; font-weight: 600; color: var(--pine); text-decoration: underline; cursor: pointer; }
+  .offscreen { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; border: 0; padding: 0; }
+
+  .done { text-align: center; padding: 30px 0; }
+  .tick {
+    width: 74px; height: 74px; margin: 0 auto 22px; border-radius: 50%;
+    background: var(--pine); display: flex; align-items: center; justify-content: center;
+  }
+  .tick svg { width: 34px; height: 34px; stroke: var(--paper); stroke-width: 2.5; fill: none; }
+
+  footer {
+    padding: 14px 22px 22px; border-top: 1px solid var(--line);
+    display: flex; gap: 11px; background: var(--paper); position: sticky; bottom: 0;
+  }
+  button {
+    flex: 1; padding: 16px; font-size: 17px; font-family: inherit; font-weight: 600;
+    border-radius: 10px; border: 1.5px solid var(--pine); cursor: pointer;
+  }
+  .primary { background: var(--pine); color: var(--paper); }
+  .ghost   { background: var(--paper); color: var(--pine); flex: 0 0 32%; }
+  button:disabled { opacity: .55; cursor: default; }
+
+  .waiting {
+    position: fixed; inset: 0; z-index: 50; background: rgba(22, 33, 31, .55);
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .waiting.show { display: flex; }
+  .waitcard { background: var(--paper); border-radius: 14px; padding: 30px 26px; text-align: center; max-width: 320px; width: 100%; }
+  .spinner {
+    width: 42px; height: 42px; margin: 0 auto 18px;
+    border: 4px solid var(--line); border-top-color: var(--pine);
+    border-radius: 50%; animation: spin 900ms linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .waitcard h3 { margin: 0 0 6px; font-family: Georgia, serif; font-weight: 400; font-size: 20px; color: var(--pine); }
+  .waitcard p { margin: 0; font-size: 14.5px; color: var(--muted); }
+</style>
+</head>
+
+<body>
+<div class="frame">
+
+  <header>
+    <img src="618cef20-5859-4fcc-8029-0d1938e7f8dddddd2e.png" alt="Assemblies of God Ghana" class="logo"
+         onerror="this.style.display='none'">
+    <p class="church">Assemblies of God Ghana, TCC Community 12</p>
+    <p class="counter">Media team photo page</p>
+  </header>
+
+  <main>
+    <div class="alert" id="alert"></div>
+
+    <!-- 0 TEAM CODE -->
+    <section class="step active">
+      <h2>Team code</h2>
+      <p class="lead">This page is for the media team only. Enter the team code to continue.</p>
+      <div class="field">
+        <label for="f_code">Team code</label>
+        <input type="password" id="f_code" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+      </div>
+    </section>
+
+    <!-- 1 SEARCH -->
+    <section class="step">
+      <h2>Find the member</h2>
+      <p class="lead">Search by phone number, registration number or surname, then tap the person.</p>
+      <div class="field">
+        <label for="f_query">Phone, registration number or surname</label>
+        <input type="text" id="f_query" placeholder="024 794 6567, TCC-260830-6D6F, or Mensah" autocomplete="off">
+        <p class="datehint">Phone numbers can be typed any way. Surnames find everyone with that name.</p>
+      </div>
+      <div id="results"></div>
+    </section>
+
+    <!-- 2 RULES AND CAMERA -->
+    <section class="step camera">
+      <div class="person" id="personLine"></div>
+      <h2>Take the photograph</h2>
+      <img src="Sample%20AI%20generated%20image.jpg" alt="Example of a head and shoulders photograph"
+           class="sample" onerror="this.style.display='none'">
+      <ul class="rules" style="text-align: left;">
+        <li>Head and shoulders only, facing the camera</li>
+        <li>Hold the phone at eye level, not from below</li>
+        <li>Plain wall behind them, light on the face</li>
+        <li>No hats, no sunglasses, nobody else in the picture</li>
+      </ul>
+
+      <label class="target" id="target" for="photoInput">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 8h3l2-2.5h8L18 8h3v11H3z"/><circle cx="12" cy="13" r="3.8"/>
+        </svg>
+        <b>Take photo</b>
+      </label>
+      <p class="hint" id="cameraHint">Tap the circle to open the camera.</p>
+      <p class="hint"><label for="galleryInput" class="linky">Or choose a photo already on this phone</label></p>
+
+      <input type="file" id="photoInput" accept="image/*" capture="user" class="offscreen">
+      <input type="file" id="galleryInput" accept="image/*" class="offscreen">
+    </section>
+
+    <!-- 3 DONE -->
+    <section class="step">
+      <div class="done">
+        <div class="tick">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 7"/></svg>
+        </div>
+        <h2>Photo saved</h2>
+        <p class="lead" id="doneLine"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <button class="ghost" id="backBtn" onclick="goBack()">Back</button>
+    <button class="primary" id="nextBtn" onclick="goNext()">Continue</button>
+  </footer>
+
+</div>
+
+<div class="waiting" id="waiting" role="status" aria-live="polite">
+  <div class="waitcard">
+    <div class="spinner"></div>
+    <h3 id="waitTitle">Searching</h3>
+    <p id="waitText">Please keep the page open.</p>
+  </div>
+</div>
+
+<script>
+/* Same backend as the registration form. Must be the /exec URL. */
+var API = 'https://script.google.com/macros/s/AKfycby3n41R0pEc_QesRSZxZntIzzUyHRPvGEldvbefeCTCCaOSWlrhZsevwtlJhD_2atgC/exec';
+
+/**
+ * No headers on purpose. A plain string body is a simple request, so there
+ * is no CORS preflight for Apps Script to fail. Same rule as the main form.
+ */
+function callApi(payload, onDone, onFail) {
+  var request = new XMLHttpRequest();
+  request.open('POST', API, true);
+  request.timeout = 60000;
+  request.onload = function () {
+    var parsed;
+    try { parsed = JSON.parse(request.responseText); } catch (error) { onFail(); return; }
+    onDone(parsed);
+  };
+  request.onerror   = onFail;
+  request.ontimeout = onFail;
+  request.send(JSON.stringify(payload));
+}
+
+var CODE_STEP = 0, SEARCH_STEP = 1, PHOTO_STEP = 2, DONE_STEP = 3;
+var steps = document.querySelectorAll('.step');
+var current = 0;
+
+var teamCode = '';
+var member = null;     // { id, name, phone, hasPhoto } chosen from the results
+var photoData = '';
+var CAMERA_ICON = document.getElementById('target').innerHTML;
+
+function val(id) { return document.getElementById(id).value.trim(); }
+
+function warn(message) {
+  var box = document.getElementById('alert');
+  box.textContent = message;
+  box.classList.add('show');
+  window.scrollTo(0, 0);
+}
+function clearWarning() { document.getElementById('alert').classList.remove('show'); }
+
+function showWaiting(title, text) {
+  document.getElementById('waitTitle').textContent = title;
+  document.getElementById('waitText').textContent = text;
+  document.getElementById('waiting').classList.add('show');
+}
+function hideWaiting() { document.getElementById('waiting').classList.remove('show'); }
+
+/* ---------- screens ---------- */
+
+function show(index) {
+  steps[current].classList.remove('active');
+  current = index;
+  steps[current].classList.add('active');
+  window.scrollTo(0, 0);
+  clearWarning();
+
+  var back = document.getElementById('backBtn');
+  var next = document.getElementById('nextBtn');
+  back.style.visibility = (current === CODE_STEP || current === DONE_STEP) ? 'hidden' : 'visible';
+  next.disabled = false;
+  next.textContent =
+      current === CODE_STEP   ? 'Continue'
+    : current === SEARCH_STEP ? 'Search'
+    : current === PHOTO_STEP  ? (photoData ? 'Save this photo' : 'Take the photo first')
+    : 'Next person';
+
+  if (current === SEARCH_STEP) document.getElementById('f_query').focus();
+}
+
+function goBack() {
+  if (current === PHOTO_STEP) { resetCamera(); show(SEARCH_STEP); }
+  else if (current === SEARCH_STEP) { show(CODE_STEP); }
+}
+
+function goNext() {
+  if (current === CODE_STEP)   { checkCode(); return; }
+  if (current === SEARCH_STEP) { search(); return; }
+  if (current === PHOTO_STEP)  { sendPhoto(); return; }
+  if (current === DONE_STEP)   { nextPerson(); return; }
+}
+
+/* Enter key works the same as the button, for the code and the search box. */
+document.getElementById('f_code').addEventListener('keydown', function (e) { if (e.key === 'Enter') goNext(); });
+document.getElementById('f_query').addEventListener('keydown', function (e) { if (e.key === 'Enter') goNext(); });
+
+/* ---------- team code ---------- */
+
+/**
+ * The server checks the code on every search, so this first check is only
+ * to catch a typo before the team starts working. A search for "TCC-" matches
+ * nobody and just proves the code is accepted.
+ */
+function checkCode() {
+  var code = val('f_code').replace(/[^0-9]/g, '');
+  if (!code) { warn('Please enter the team code.'); return; }
+
+  showWaiting('Checking', 'One moment.');
+  callApi({ action: 'find', code: code, query: 'TCC-' },
+    function (result) {
+      hideWaiting();
+      if (!result.ok) { warn(result.message || 'That team code is not correct.'); return; }
+      teamCode = code;
+      try { sessionStorage.setItem('tcc_team_code', code); } catch (error) {}
+      show(SEARCH_STEP);
+    },
+    function () {
+      hideWaiting();
+      warn('Could not reach the server. Check the connection and try again.');
+    });
+}
+
+/* Remembered for this browser session only, so nobody retypes it per person. */
+function restoreCode() {
+  try {
+    var saved = sessionStorage.getItem('tcc_team_code');
+    if (saved) { teamCode = saved; show(SEARCH_STEP); }
+  } catch (error) {}
+}
+
+/* ---------- search ---------- */
+
+function search() {
+  var query = val('f_query');
+  if (query.length < 2) { warn('Type a phone number, registration number or surname.'); return; }
+
+  var button = document.getElementById('nextBtn');
+  button.disabled = true;
+  showWaiting('Searching', 'Looking through the register.');
+
+  callApi({ action: 'find', code: teamCode, query: query },
+    function (result) {
+      hideWaiting();
+      button.disabled = false;
+      if (!result.ok) {
+        warn(result.message);
+        // A rejected code sends the team back to the start rather than
+        // letting them keep searching against a wall of errors.
+        if (/team code/i.test(result.message || '')) {
+          teamCode = '';
+          try { sessionStorage.removeItem('tcc_team_code'); } catch (error) {}
+          show(CODE_STEP);
+        }
+        return;
+      }
+      renderResults(result.members || [], result.truncated);
+    },
+    function () {
+      hideWaiting();
+      button.disabled = false;
+      warn('The search did not go through. Check the connection and try again.');
+    });
+}
+
+function renderResults(members, truncated) {
+  var box = document.getElementById('results');
+  if (members.length === 0) {
+    box.innerHTML = '<p class="empty">No one found. Check the spelling or try the phone number. '
+                  + 'If they have not registered yet, they must fill the main form first.</p>';
+    return;
+  }
+
+  var html = '';
+  for (var i = 0; i < members.length; i++) {
+    var m = members[i];
+    html += '<button type="button" class="result" onclick="choose(' + i + ')">'
+          + '<span class="who">' + escapeHtml(m.name)
+          + '<span class="phone">' + escapeHtml(m.phone || 'No phone on file') + ' &middot; ' + escapeHtml(m.id) + '</span></span>'
+          + '<span class="badge ' + (m.hasPhoto ? 'has' : 'none') + '">'
+          + (m.hasPhoto ? 'Has photo' : 'No photo') + '</span>'
+          + '</button>';
+  }
+  if (truncated) {
+    html += '<p class="empty">Showing the first 20. Add more of the name or use the phone number.</p>';
+  }
+  box.innerHTML = html;
+  box.setAttribute('data-members', JSON.stringify(members));
+}
+
+function choose(index) {
+  var members = JSON.parse(document.getElementById('results').getAttribute('data-members') || '[]');
+  member = members[index];
+  if (!member) return;
+
+  document.getElementById('personLine').textContent =
+    member.name + ' (' + member.id + ')'
+    + (member.hasPhoto ? '. A photo is already on file and will be replaced.' : '. No photo on file yet.');
+  resetCamera();
+  show(PHOTO_STEP);
+}
+
+/* ---------- photo ---------- */
+
+var MAX_PHOTO_SIZE = 800;
+
+/**
+ * Decode at reduced size. A full-size camera image needs hundreds of
+ * megabytes to decode and crashes older phones. Same approach as the form.
+ */
+function handlePhoto(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  var target = document.getElementById('target');
+  target.classList.remove('filled');
+  target.innerHTML = '<b>Working on the photo</b>';
+
+  if (window.createImageBitmap) {
+    createImageBitmap(file, { resizeWidth: MAX_PHOTO_SIZE, resizeQuality: 'high' })
+      .then(function (bitmap) {
+        drawPhoto(bitmap, bitmap.width, bitmap.height);
+        if (bitmap.close) bitmap.close();
+      })
+      .catch(function () { decodeTheOldWay(file); });
+    return;
+  }
+  decodeTheOldWay(file);
+}
+
+function decodeTheOldWay(file) {
+  var image = new Image();
+  var source = URL.createObjectURL(file);
+  image.onerror = function () { URL.revokeObjectURL(source); photoFailed(); };
+  image.onload = function () {
+    var scale = Math.min(1, MAX_PHOTO_SIZE / Math.max(image.width, image.height));
+    try {
+      drawPhoto(image, Math.round(image.width * scale), Math.round(image.height * scale));
+    } catch (error) { photoFailed(); }
+    URL.revokeObjectURL(source);
+  };
+  image.src = source;
+}
+
+function drawPhoto(source, width, height) {
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext('2d').drawImage(source, 0, 0, width, height);
+    photoData = canvas.toDataURL('image/jpeg', 0.82);
+    canvas.width = 1;
+    canvas.height = 1;
+  } catch (error) { photoFailed(); return; }
+
+  var target = document.getElementById('target');
+  target.innerHTML = '<img src="' + photoData + '" alt="The photograph">';
+  target.classList.add('filled');
+  document.getElementById('cameraHint').textContent = 'Tap the photo to take it again.';
+  document.getElementById('nextBtn').textContent = 'Save this photo';
+  clearWarning();
+}
+
+function photoFailed() {
+  photoData = '';
+  resetCamera();
+  warn('The phone ran short of memory on that photo. Close other apps and try again, '
+     + 'or use the gallery option.');
+}
+
+function resetCamera() {
+  photoData = '';
+  var target = document.getElementById('target');
+  target.className = 'target';
+  target.innerHTML = CAMERA_ICON;
+  document.getElementById('cameraHint').textContent = 'Tap the circle to open the camera.';
+  document.getElementById('photoInput').value = '';
+  document.getElementById('galleryInput').value = '';
+}
+
+document.getElementById('photoInput').addEventListener('change', handlePhoto);
+document.getElementById('galleryInput').addEventListener('change', handlePhoto);
+
+function sendPhoto() {
+  if (!photoData) { warn('Take the photo first, then save it.'); return; }
+  if (!member) { show(SEARCH_STEP); return; }
+
+  var button = document.getElementById('nextBtn');
+  button.disabled = true;
+  showWaiting('Saving the photo', 'Photos take a little longer than text. Keep the page open.');
+
+  callApi({ action: 'photo', id: member.id, photo: photoData },
+    function (result) {
+      hideWaiting();
+      button.disabled = false;
+      if (!result.ok) { warn(result.message || 'The photo did not save.'); return; }
+      document.getElementById('doneLine').textContent =
+        'Saved for ' + member.name + ' as ' + result.filename + '.';
+      show(DONE_STEP);
+    },
+    function () {
+      hideWaiting();
+      button.disabled = false;
+      warn('The photo did not send. Check the connection and tap Save again.');
+    });
+}
+
+function nextPerson() {
+  member = null;
+  resetCamera();
+  document.getElementById('f_query').value = '';
+  document.getElementById('results').innerHTML = '';
+  show(SEARCH_STEP);
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+/* ---------- start ---------- */
+show(CODE_STEP);
+restoreCode();
+</script>
+</body>
+</html>
