@@ -1166,22 +1166,31 @@ function departmentList() {
  * Returns the number as ten digits starting with zero, or an empty string
  * if it is not a valid Ghana mobile number.
  *   024 794 6567 / 247946567 / +233 24 794 6567  ->  0247946567
+ *
+ * The second digit must be 2 or 5, which every Ghana mobile prefix uses.
+ * Checking only for ten digits starting with zero let 0024794656 through,
+ * an eight digit number with a stray zero typed in front of it.
  */
 function ghanaPhone(value) {
   var digits = String(value || '').replace(/[^0-9]/g, '');
 
-  if (digits.length === 12 && digits.indexOf('233') === 0) digits = '0' + digits.slice(3);
-  else if (digits.length === 9) digits = '0' + digits;
+  // Strip an international prefix written any of the usual ways.
+  if (digits.indexOf('00233') === 0) digits = digits.slice(5);
+  else if (digits.indexOf('233') === 0 && digits.length > 10) digits = digits.slice(3);
 
-  if (digits.length === 10 && digits.charAt(0) === '0') return digits;
-  return '';
+  if (digits.length === 9) digits = '0' + digits;
+
+  return /^0[25][0-9]{8}$/.test(digits) ? digits : '';
 }
 
 /** Groups the digits as 024 794 6567 while the person types. */
 function maskPhone(box) {
   var digits = box.value.replace(/[^0-9]/g, '');
 
-  if (digits.length > 10 && digits.indexOf('233') === 0) digits = '0' + digits.slice(3);
+  if (digits.indexOf('00233') === 0) digits = digits.slice(5);
+  else if (digits.indexOf('233') === 0 && digits.length > 10) digits = digits.slice(3);
+  // A second leading zero is always a typing slip: 00 24... is never a number.
+  if (digits.indexOf('00') === 0) digits = digits.slice(1);
   digits = digits.substring(0, 10);
 
   var out = digits.substring(0, 3);
@@ -1395,8 +1404,9 @@ function stepIsValid() {
       return false;
     }
     if (ghana && !ghanaPhone(ghana)) {
-      warn('The Ghana number is not complete. Ten digits starting with 0, '
-         + 'for example 024 794 6567. Or clear the box.');
+      warn('That Ghana number does not look right. It should be ten digits '
+         + 'starting with 02 or 05, for example 024 794 6567. Count the digits, '
+         + 'or clear the box.');
       return false;
     }
     if (overseas && !internationalPhone(overseas)) {
